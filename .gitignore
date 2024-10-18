@@ -6,3 +6,14 @@ testspace/*
 *.dump
 *.data
 fpga/fpga
+.gitignore
+fpga
+script
+testcase
+README.md
+
+.gitignore
+fpga_
+script_
+testcase_
+README.md_
