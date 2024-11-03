@@ -48,7 +48,7 @@ run_sim: build_sim build_sim_test
 
 
 fpga_device := /dev/ttyUSB1
-fpga_run_mode := -I # or -T
+fpga_run_mode := -T # or -I
 
 # Please manually load .bit file to FPGA
 run_fpga: build_fpga_test
