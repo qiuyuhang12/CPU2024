@@ -1,20 +1,20 @@
 `include "Const.v"
 
 module Alu_common(input wire clk_in,                             // system clock signal
-           input wire rst_in,                             // reset signal
-           input wire rdy_in,                             // ready signal, pause cpu when low
-           input wire new,
-           input wire [31:0] vi,
-           input wire [31:0] vj,
-           input wire [4:0] imm,
-           input wire [2:0] op,
-           input wire has_imm,
-           input wire op_addition,
-           input wire [`ROB_SIZE_BIT-1:0]rob_entry,
-           output wire [31:0] res,
-           output wire ready,
-           output wire [`ROB_SIZE_BIT-1:0] rob_entry_out,
-           );
+                  input wire rst_in,                             // reset signal
+                  input wire rdy_in,                             // ready signal, pause cpu when low
+                  input wire valid,
+                  input wire [31:0] vi,
+                  input wire [31:0] vj,
+                  input wire [4:0] imm,
+                  input wire [2:0] op,
+                  input wire has_imm,
+                  input wire op_addition,
+                  input wire [`ROB_BIT-1:0]rob_entry,
+                  output wire [31:0] res,
+                  output wire ready,
+                  output wire [`ROB_BIT-1:0] rob_entry_out,
+                  );
     localparam AddSub = 3'b000;
     localparam Sll    = 3'b001;
     localparam Slt    = 3'b010;
@@ -34,13 +34,13 @@ module Alu_common(input wire clk_in,                             // system clock
         end
         else if (!rdy_in)begin
         end
-            else if (!new)begin
+            else if (!valid)begin
             ready <= 1'b0;
             end
         else begin
             ready         <= 1'b1;
             rob_entry_out <= rob_entry;
-            if (new)begin
+            if (valid)begin
                 case(has_imm)
                     1'b0:begin
                         case(op)

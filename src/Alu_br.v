@@ -3,16 +3,16 @@
 module Alu_common(input wire clk_in,                             // system clock signal
                   input wire rst_in,                             // reset signal
                   input wire rdy_in,                             // ready signal, pause cpu when low
-                  input wire new,
+                  input wire valid,
                   input wire [31:0] vi,
                   input wire [31:0] vj,
                   input wire [12:1] imm,
                   input wire [2:0] op,
                   input wire [31:0] pc,
-                  input wire [`ROB_SIZE_BIT-1:0]rob_entry,
+                  input wire [`ROB_BIT-1:0]rob_entry,
                   output wire res,
                   output wire ready,
-                  output wire [`ROB_SIZE_BIT-1:0] rob_entry_out,
+                  output wire [`ROB_BIT-1:0] rob_entry_out,
                   output wire [31:0] pc_out,
                   );
     localparam Beq  = 3'b000;
@@ -32,22 +32,69 @@ module Alu_common(input wire clk_in,                             // system clock
         end
         else if (!rdy_in)begin
         end
-            else if (!new)begin
+            else if (!valid)begin
             ready <= 1'b0;
             end
         else begin
             ready         <= 1'b1;
             rob_entry_out <= rob_entry;
-            if (new)begin
+            if (valid)begin
                 case(op)
-                    Beq :res <= vi == vj;
-                    Bne :res <= vi != vj;
-                    Blt :res <= $signed(vi) < $signed(vj);
-                    Bge :res <= $signed(vi) >= $signed(vj);
-                    Bltu:res <= $unsigned(vi) < $unsigned(vj);
-                    Bgeu:res <= $unsigned(vi) >= $unsigned(vj);
+                    Beq :begin
+                        res <= vi == vj;
+                        if (vi == vj) begin
+                            pc_out <= pc + sext_imm;
+                        end
+                        else begin
+                            pc_out <= pc + 4;
+                        end
+                    end
+                    Bne :begin
+                        res <= vi != vj;
+                        if (vi != vj) begin
+                            pc_out <= pc + sext_imm;
+                        end
+                        else begin
+                            pc_out <= pc + 4;
+                        end
+                    end
+                    Blt :begin
+                        res <= $signed(vi) < $signed(vj);
+                        if ($signed(vi) < $signed(vj)) begin
+                            pc_out <= pc + sext_imm;
+                        end
+                        else begin
+                            pc_out <= pc + 4;
+                        end
+                    end
+                    Bge :begin
+                        res <= $signed(vi) >= $signed(vj);
+                        if ($signed(vi) >= $signed(vj)) begin
+                            pc_out <= pc + sext_imm;
+                        end
+                        else begin
+                            pc_out <= pc + 4;
+                        end
+                    end
+                    Bltu:begin
+                        res <= $unsigned(vi) < $unsigned(vj);
+                        if ($unsigned(vi) < $unsigned(vj)) begin
+                            pc_out <= pc + sext_imm;
+                        end
+                        else begin
+                            pc_out <= pc + 4;
+                        end
+                    end
+                    Bgeu:begin
+                        res <= $unsigned(vi) >= $unsigned(vj);
+                        if ($unsigned(vi) >= $unsigned(vj)) begin
+                            pc_out <= pc + sext_imm;
+                        end
+                        else begin
+                            pc_out <= pc + 4;
+                        end
+                    end
                 endcase
-                //todo: pc_out
             end
         end
     end
