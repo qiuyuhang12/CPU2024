@@ -13,3 +13,6 @@
 `define S_TYPE 7'b0100011
 `define ALGI_TYPE 7'b0010011
 `define R_TYPE 7'b0110011
+
+`define CDB_BIT 3
+`define CDB_SIZE (1 << `CDB_BIT)
