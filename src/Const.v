@@ -14,5 +14,7 @@
 `define ALGI_TYPE 7'b0010011
 `define R_TYPE 7'b0110011
 
+`define END_TYPE 32'h0ff00513
+
 `define CDB_BIT 3
 `define CDB_SIZE (1 << `CDB_BIT)

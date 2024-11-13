@@ -30,7 +30,12 @@ module Rob(input wire clk_in,                            // system clock signal
            input wire [31:0] lsb_value,
            input wire jal_jalr_ready,                    //from jal/jalr
            input wire [`ROB_BIT-1:0] jal_jalr_rob_entry,
-           input wire [31:0] jal_jalr_value,
+           input wire [31:0] j_next_pc,
+           input wire br_ready,                          //from br
+           input wire [`ROB_BIT-1:0] br_rob_entry,
+           input wire [31:0] br_value,                   //true if should branch
+           input wire [31:0] br_next_pc,
+           input wire memory_working,                    //from memory
            );
     parameter UNKNOW = 3'b000,ISSUE = 3'b001,WRITE = 3'b010,COMMIT = 3'b011,TODELETECDB = 3'b100;
     //todo 初始 head = 0,tail = 0
@@ -42,7 +47,7 @@ module Rob(input wire clk_in,                            // system clock signal
     reg [31:0] insts_addr[0:`ROB_SIZE-1];
     reg [3:0] rd[0:`ROB_SIZE-1];
     reg [31:0] value[0:`ROB_SIZE-1];
-    
+    reg branch[0:`ROB_SIZE-1];//true if prediction is right
     //ISSUE
     //todo:有些东西每个周期都要恢复默认
     always @(posedge clk_in)
@@ -59,7 +64,7 @@ module Rob(input wire clk_in,                            // system clock signal
             //ISSUE
             if (inst_valid) begin
                 tail <= tail+1;
-                if (inst == 32'h0ff00513) begin
+                if (inst == `END_TYPE) begin
                     //todo:end
                 end
                 insts[tail]      <= inst;
@@ -139,15 +144,50 @@ module Rob(input wire clk_in,                            // system clock signal
                 assert (op_type == `JAL||op_type == `JALR) else $fatal("Assertion failed: jal_jalr unmatched");
                 state[jal_jalr_rob_entry] <= WRITE;
                 if (op_type == `JALR) begin
-                    next_pc    <= jal_jalr_value;
+                    next_pc    <= j_next_pc;
                     jalr_panic <= 0;
                 end
             end
-
-            // //todo:B_TYPE & BR
-            // if (conditions) begin
+            
+            if (br_ready) begin
+                assert (busy[br_rob_entry] == 1&&state[br_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild br_rob_entry");
+                assert (op_type == `B_TYPE) else $fatal("Assertion failed: br_ready unmatched");
+                state[br_rob_entry] <= WRITE;
+                branch[br_rob_entry] < = (br_value == value[br_rob_entry]);
+                value[br_rob_entry] <= br_next_pc;//from bool to pc value
+                //todo:predictor
+            end
+        end
+    end
+    
+    //STEP
+    always @(posedge clk_in) begin
+        if (!rst_in && rdy_in) begin
+            if (busy[head] == 1) begin
+                if (state[head] == `COMMIT&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE)) begin
+                    busy[head] <= 0;
+                    head       <= head+1;
+                    //DEBUG:
+                    state[head]      <= UNKNOW;
+                    insts[head]      <= 32'h0;
+                    insts_addr[head] <= 32'h0;
+                    rd[head]         <= 4'hf;
+                    value[head]      <= 32'h0;
+                    branch[head]     <= 0;
+                end
+                //    if ((tmp.state == WRITE&&(tmp.inst.tp! = S_TYPE&&tmp.inst.originalOp! = 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
                 
-            // end
+                if ((state[head] == `WRITE&&(op_type[head]! = `S_TYPE&&op_type[head]! = `B_TYPE))||(state[head] == `ISSUE&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE))||insts[head] == `END_TYPE)begin
+                //TODO:commit
+                    end
+                else if (op_type[head] == `S_TYPE||op_type[head] == `B_TYPE&&(!memory_working&&op_type[head] == WRITE)) begin
+                    state[head] <= COMMIT;
+                end
+                else begin
+                    
+                end
+                
+            end
         end
     end
     
