@@ -13,30 +13,37 @@ module Rob(input wire clk_in,                            // system clock signal
            input wire [`CDB_SIZE-1:0],                   //from reg
            output reg rob_full,
            output reg[31:0] next_pc,
-           output wire [3:0] set_reg_id,                 //defualt -1//to reg
-           output wire [31:0] rob_entry,
+           output wire [4:0] issue_rd_reg_id,            //to reg//defualt -1
+           output wire [31:0] rob_entry_issued,
+           output reg [4:0] commit_rd_reg_id,
+           output reg [31:0] commit_value,               //to reg//todo:broadcast it
+           output reg [`ROB_BIT-1:0] commit_rob_entry,   //to reg//todo:broadcast it
            output reg pc_frozen,                         //to cdb
            output reg jalr_panic,                        //to cdb
-           output reg [31:0] issue_value,                //lui/jal/jalr
-           output reg [`ROB_BIT:0] issue_entry,          //lui/jal/jalr
-           input wire alu_ready,                         //from alu
+           output reg [31:0] lj_issue_value,             //lui/jal
+           output reg [`ROB_BIT:0] lj_issue_entry,
+           input wire alu_ready_bd,                      //from alu
            input wire [`ROB_BIT-1:0] alu_rob_entry,
            input wire [31:0] alu_value,
-           input wire rs_ready,                          //from rs
+           input wire rs_ready_bd,                       //from rs
            input wire [`ROB_BIT-1:0] rs_rob_entry,
            input wire [31:0] rs_value,
-           input wire lsb_ready,                         //from lsb
+           input wire lsb_ready_bd,                      //from lsb
            input wire [`ROB_BIT-1:0] lsb_rob_entry,
            input wire [31:0] lsb_value,
-           input wire jal_jalr_ready,                    //from jal/jalr
+           input wire jal_jalr_ready_bd,                 //from jal/jalr
            input wire [`ROB_BIT-1:0] jal_jalr_rob_entry,
            input wire [31:0] j_next_pc,
-           input wire br_ready,                          //from br
+           input wire br_ready_bd,                       //from br
            input wire [`ROB_BIT-1:0] br_rob_entry,
            input wire [31:0] br_value,                   //true if should branch
            input wire [31:0] br_next_pc,
            input wire memory_working,                    //from memory
+           input wire lsb_ready,                         //from lsb
+           output reg lsb_commit,                        //to lsb
+           output reg clear_up,                 //wrong_predicted_clear_signal
            );
+           //todo:广播不一定对齐了
     parameter UNKNOW = 3'b000,ISSUE = 3'b001,WRITE = 3'b010,COMMIT = 3'b011,TODELETECDB = 3'b100;
     //todo 初始 head = 0,tail = 0
     reg [`ROB_BIT-1:0] head;
@@ -77,8 +84,8 @@ module Rob(input wire clk_in,                            // system clock signal
                 state[tail] < = (op_type == `LUI||op_type == `JAL)?WRITE:ISSUE;
                 
                 if (op_type! = `B_TYPE&&op_type! = `S_TYPE) begin
-                    set_reg_id <= rd_id;
-                    rob_entry  <= tail;
+                    issue_rd_reg_id  <= rd_id;
+                    rob_entry_issued <= tail;
                 end
                 
                 if (op_type == `B_TYPE) begin
@@ -89,29 +96,29 @@ module Rob(input wire clk_in,                            // system clock signal
                 end
                 
                 if (op_type == `LUI) begin
-                    value[tail]    <= imm;
-                    set_reg_id     <= rd_id;
-                    rob_entry      <= tail;
-                    // state[tail] <= WRITE;
-                    issue_value    <= imm;
-                    issue_entry    <= tail;
+                    value[tail]      <= imm;
+                    issue_rd_reg_id  <= rd_id;
+                    rob_entry_issued <= tail;
+                    // state[tail]   <= WRITE;
+                    lj_issue_value   <= imm;
+                    lj_issue_entry   <= tail;
                 end
                 
                 if (op_type == `JAL||op_type == `JALR) begin
-                    value[tail] <= inst_addr+4;
-                    set_reg_id  <= rd_id;
-                    rob_entry   <= tail;
+                    value[tail]      <= inst_addr+4;
+                    issue_rd_reg_id  <= rd_id;
+                    rob_entry_issued <= tail;
                 end
                 
                 if (op_type == `JALR) begin
                     jalr_panic <= 1;
                 end
                 
-                if (op_type == `Jal) begin
+                if (op_type == `JAL) begin
                     pc_frozen      <= 1;
                     next_pc        <= inst_addr+imm;
-                    issue_entry    <= tail;
-                    issue_value    <= inst_addr+4;
+                    lj_issue_entry <= tail;
+                    lj_issue_value <= inst_addr+4;
                     // state[tail] <= WRITE;
                 end
             end
@@ -121,25 +128,25 @@ module Rob(input wire clk_in,                            // system clock signal
     //RECIEVE BROADCAST
     always @(posedge clk_in) begin
         if (!rst_in && rdy_in && 1) begin
-            if (alu_ready) begin
+            if (alu_ready_bd) begin
                 assert (busy[alu_rob_entry] == 1&&state[alu_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild alu_rob_entry");
                 state[alu_rob_entry] <= WRITE;
                 value[alu_rob_entry] <= alu_value;
             end
             
-            if (rs_ready) begin
+            if (rs_ready_bd) begin
                 assert (busy[rs_rob_entry] == 1&&state[rs_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild rs_rob_entry");
                 state[rs_rob_entry] <= WRITE;
                 value[rs_rob_entry] <= rs_value;
             end
             
-            if (lsb_ready) begin
+            if (lsb_ready_bd) begin
                 assert (busy[lsb_rob_entry] == 1&&state[lsb_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild lsb_rob_entry");
                 state[lsb_rob_entry] <= WRITE;
                 value[lsb_rob_entry] <= lsb_value;
             end
             
-            if (jal_jalr_ready) begin
+            if (jal_jalr_ready_bd) begin
                 assert (busy[jal_jalr_rob_entry] == 1&&state[jal_jalr_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild jal_jalr_rob_entry");
                 assert (op_type == `JAL||op_type == `JALR) else $fatal("Assertion failed: jal_jalr unmatched");
                 state[jal_jalr_rob_entry] <= WRITE;
@@ -149,9 +156,9 @@ module Rob(input wire clk_in,                            // system clock signal
                 end
             end
             
-            if (br_ready) begin
+            if (br_ready_bd) begin
                 assert (busy[br_rob_entry] == 1&&state[br_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild br_rob_entry");
-                assert (op_type == `B_TYPE) else $fatal("Assertion failed: br_ready unmatched");
+                assert (op_type == `B_TYPE) else $fatal("Assertion failed: br_ready_bd unmatched");
                 state[br_rob_entry] <= WRITE;
                 branch[br_rob_entry] < = (br_value == value[br_rob_entry]);
                 value[br_rob_entry] <= br_next_pc;//from bool to pc value
@@ -175,20 +182,59 @@ module Rob(input wire clk_in,                            // system clock signal
                     value[head]      <= 32'h0;
                     branch[head]     <= 0;
                 end
-                //    if ((tmp.state == WRITE&&(tmp.inst.tp! = S_TYPE&&tmp.inst.originalOp! = 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
                 
+                //    if ((tmp.state == WRITE&&(tmp.inst.tp! = S_TYPE&&tmp.inst.originalOp! = 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
                 if ((state[head] == `WRITE&&(op_type[head]! = `S_TYPE&&op_type[head]! = `B_TYPE))||(state[head] == `ISSUE&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE))||insts[head] == `END_TYPE)begin
                 //TODO:commit
+                    if (op_type[head] == `END_TYPE) begin
+                        //todo:END
+                    end
+                    else if (op_type[head] == `S_TYPE||op_type[head] == `LD_TYPE) begin
+                        if (!memory_working&&lsb_ready) begin
+                            state[head] <= WRITE;
+                            lsb_commit  <= 1;
+                        end
+                    end
+                    else begin
+                        busy[head] <= 0;
+                        head       <= head+1;
+                        //DEBUG:
+                        state[head]      <= UNKNOW;
+                        insts[head]      <= 32'h0;
+                        insts_addr[head] <= 32'h0;
+                        rd[head]         <= 4'hf;
+                        value[head]      <= 32'h0;
+                        branch[head]     <= 0;
+                        case (op_type[head])
+                            `LUI:
+                            `AUIPC:
+                            `JAL:
+                            `JALR:
+                            `R_TYPE:
+                            `I_TYPE:begin
+                                commit_rd_reg_id <= rd[head];
+                                commit_value     <= value[head];
+                                commit_rob_entry <= head;//todo:如果reg的依赖正是此entry,则将依赖清空。
+                            end
+                            `B_TYPE:begin
+                                if (!branch[head]) begin
+                                    clear_up <= 1;
+                                    pc_frozen <= 1;
+                                    next_pc   <= value[head];
+                                end
+                            end
+                            default:begin
+                                assert (0) else $fatal("commit failed: op_type unmatched");
+                            end
+                        endcase
+                    end
                     end
                 else if (op_type[head] == `S_TYPE||op_type[head] == `B_TYPE&&(!memory_working&&op_type[head] == WRITE)) begin
                     state[head] <= COMMIT;
                 end
                 else begin
-                    
                 end
-                
             end
         end
     end
-    
 endmodule
