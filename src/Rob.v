@@ -41,9 +41,9 @@ module Rob(input wire clk_in,                            // system clock signal
            input wire memory_working,                    //from memory
            input wire lsb_ready,                         //from lsb
            output reg lsb_commit,                        //to lsb
-           output reg clear_up,                 //wrong_predicted_clear_signal
+           output reg clear_up,                          //wrong_predicted_clear_signal
            );
-           //todo:广播不一定对齐了
+    //todo:广播不一定对齐了
     parameter UNKNOW = 3'b000,ISSUE = 3'b001,WRITE = 3'b010,COMMIT = 3'b011,TODELETECDB = 3'b100;
     //todo 初始 head = 0,tail = 0
     reg [`ROB_BIT-1:0] head;
@@ -60,69 +60,96 @@ module Rob(input wire clk_in,                            // system clock signal
     always @(posedge clk_in)
     begin
         if (rst_in) begin
+            //todo?
         end
-        else if (!rdy_in) begin
-        end
-            //todo else 的条件
-        else begin
-            //todo:full本次填满且head没有提交
-            rob_full < = (tail == head)&&busy[tail];
-            // ||(tail == head+1&&busy[tail-1]);
-            //ISSUE
-            if (inst_valid) begin
-                tail <= tail+1;
-                if (inst == `END_TYPE) begin
-                    //todo:end
-                end
-                insts[tail]      <= inst;
-                insts_addr[tail] <= inst_addr;
-                rd[tail]         <= rd_id;
-                busy[tail]       <= 1;
-                //todo: 由于部分指令没有issue阶段，记得在合适的地方修改正常指令state
-                // state[tail] <= ISSUE;
-                //LS
-                state[tail] < = (op_type == `LUI||op_type == `JAL)?WRITE:ISSUE;
-                
-                if (op_type! = `B_TYPE&&op_type! = `S_TYPE) begin
-                    issue_rd_reg_id  <= rd_id;
-                    rob_entry_issued <= tail;
-                end
-                
-                if (op_type == `B_TYPE) begin
-                    pc_frozen <= 1;
-                    //todo:predict
-                    next_pc     <= inst_addr+imm;
-                    value[tail] <= 1;
-                end
-                
-                if (op_type == `LUI) begin
-                    value[tail]      <= imm;
-                    issue_rd_reg_id  <= rd_id;
-                    rob_entry_issued <= tail;
-                    // state[tail]   <= WRITE;
-                    lj_issue_value   <= imm;
-                    lj_issue_entry   <= tail;
-                end
-                
-                if (op_type == `JAL||op_type == `JALR) begin
-                    value[tail]      <= inst_addr+4;
-                    issue_rd_reg_id  <= rd_id;
-                    rob_entry_issued <= tail;
-                end
-                
-                if (op_type == `JALR) begin
-                    jalr_panic <= 1;
-                end
-                
-                if (op_type == `JAL) begin
-                    pc_frozen      <= 1;
-                    next_pc        <= inst_addr+imm;
-                    lj_issue_entry <= tail;
-                    lj_issue_value <= inst_addr+4;
-                    // state[tail] <= WRITE;
-                end
+        
+        if (rst_in||(clear_up&&rdy_in)) begin
+            rob_full         <= 0;
+            next_pc          <= 32'h0;
+            issue_rd_reg_id  <= 5'h1f;
+            rob_entry_issued <= 32'h0;
+            commit_rd_reg_id <= 5'h1f;
+            commit_value     <= 32'h0;
+            commit_rob_entry <= 5'h1f;
+            pc_frozen        <= 0;
+            jalr_panic       <= 0;
+            lj_issue_value   <= 32'h0;
+            lj_issue_entry   <= 5'h1f;
+            lsb_commit       <= 0;
+            clear_up         <= 0;
+            
+            head <= 0;
+            tail <= 0;
+            for (int i = 0; i < `ROB_SIZE; i = i + 1) begin
+                busy[i]       <= 0;
+                state[i]      <= UNKNOW;
+                insts[i]      <= 32'h0;
+                insts_addr[i] <= 32'h0;
+                rd[i]         <= 4'hf;
+                value[i]      <= 32'h0;
+                branch[i]     <= 0;
             end
         end
+        //todo else 的条件
+        else if (rdy_in)begin
+        //todo:full本次填满且head没有提交
+        rob_full <= (tail == head)&&busy[tail];
+        // ||(tail == head+1&&busy[tail-1]);
+        //ISSUE
+        if (inst_valid) begin
+            tail <= tail+1;
+            if (inst == `END_TYPE) begin
+                //todo:end
+            end
+            insts[tail]      <= inst;
+            insts_addr[tail] <= inst_addr;
+            rd[tail]         <= rd_id;
+            busy[tail]       <= 1;
+            //todo: 由于部分指令没有issue阶段，记得在合适的地方修改正常指令state
+            // state[tail] <= ISSUE;
+            //LS
+            state[tail] <= (op_type == `LUI||op_type == `JAL)?WRITE:ISSUE;
+            
+            if (op_type!= `B_TYPE&&op_type!= `S_TYPE) begin
+                issue_rd_reg_id  <= rd_id;
+                rob_entry_issued <= tail;
+            end
+            
+            if (op_type == `B_TYPE) begin
+                pc_frozen <= 1;
+                //todo:predict
+                next_pc     <= inst_addr+imm;
+                value[tail] <= 1;
+            end
+            
+            if (op_type == `LUI) begin
+                value[tail]      <= imm;
+                issue_rd_reg_id  <= rd_id;
+                rob_entry_issued <= tail;
+                // state[tail]   <= WRITE;
+                lj_issue_value   <= imm;
+                lj_issue_entry   <= tail;
+            end
+            
+            if (op_type == `JAL||op_type == `JALR) begin
+                value[tail]      <= inst_addr+4;
+                issue_rd_reg_id  <= rd_id;
+                rob_entry_issued <= tail;
+            end
+            
+            if (op_type == `JALR) begin
+                jalr_panic <= 1;
+            end
+            
+            if (op_type == `JAL) begin
+                pc_frozen      <= 1;
+                next_pc        <= inst_addr+imm;
+                lj_issue_entry <= tail;
+                lj_issue_value <= inst_addr+4;
+                // state[tail] <= WRITE;
+            end
+        end
+    end
     end
     
     //RECIEVE BROADCAST
@@ -160,7 +187,7 @@ module Rob(input wire clk_in,                            // system clock signal
                 assert (busy[br_rob_entry] == 1&&state[br_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild br_rob_entry");
                 assert (op_type == `B_TYPE) else $fatal("Assertion failed: br_ready_bd unmatched");
                 state[br_rob_entry] <= WRITE;
-                branch[br_rob_entry] < = (br_value == value[br_rob_entry]);
+                branch[br_rob_entry] <= (br_value == value[br_rob_entry]);
                 value[br_rob_entry] <= br_next_pc;//from bool to pc value
                 //todo:predictor
             end
@@ -183,8 +210,8 @@ module Rob(input wire clk_in,                            // system clock signal
                     branch[head]     <= 0;
                 end
                 
-                //    if ((tmp.state == WRITE&&(tmp.inst.tp! = S_TYPE&&tmp.inst.originalOp! = 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
-                if ((state[head] == `WRITE&&(op_type[head]! = `S_TYPE&&op_type[head]! = `B_TYPE))||(state[head] == `ISSUE&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE))||insts[head] == `END_TYPE)begin
+                //    if ((tmp.state == WRITE&&(tmp.inst.tp!= S_TYPE&&tmp.inst.originalOp!= 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
+                if ((state[head] == `WRITE&&(op_type[head]!= `S_TYPE&&op_type[head]!= `B_TYPE))||(state[head] == `ISSUE&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE))||insts[head] == `END_TYPE)begin
                 //TODO:commit
                     if (op_type[head] == `END_TYPE) begin
                         //todo:END
@@ -218,7 +245,7 @@ module Rob(input wire clk_in,                            // system clock signal
                             end
                             `B_TYPE:begin
                                 if (!branch[head]) begin
-                                    clear_up <= 1;
+                                    clear_up  <= 1;
                                     pc_frozen <= 1;
                                     next_pc   <= value[head];
                                 end
