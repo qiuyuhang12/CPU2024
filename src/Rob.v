@@ -9,11 +9,11 @@ module Rob(input wire clk_in,                            // system clock signal
            input wire [`REG_BIT - 1:0] rd_id,
            input wire [31:0] imm,                        //经过sext
            input wire [6:0]op_type,                      //大
-           input wire [3:0]op,                           //小
-           input wire [`CDB_SIZE-1:0],                   //from reg
+           input wire [2:0]op,                           //小
+        //    input wire [`CDB_SIZE-1:0],                
            output reg rob_full,
            output reg[31:0] next_pc,
-           output wire [4:0] issue_rd_reg_id,            //to reg//defualt -1
+           output wire [4:0] issue_rd_reg_id,            //to reg//defualt 0
            output wire [31:0] rob_entry_issued,
            output reg [4:0] commit_rd_reg_id,
            output reg [31:0] commit_value,               //to reg//todo:broadcast it

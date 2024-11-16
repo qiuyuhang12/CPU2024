@@ -18,3 +18,6 @@
 
 `define CDB_BIT 3
 `define CDB_SIZE (1 << `CDB_BIT)
+
+`define RS_BIT 4 
+`define RS_SIZE (1 << `RS_BIT)
