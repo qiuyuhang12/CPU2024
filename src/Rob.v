@@ -10,7 +10,6 @@ module Rob(input wire clk_in,                            // system clock signal
            input wire [31:0] imm,                        //经过sext
            input wire [6:0]op_type,                      //大
            input wire [2:0]op,                           //小
-        //    input wire [`CDB_SIZE-1:0],                
            output reg rob_full,
            output reg[31:0] next_pc,
            output wire [4:0] issue_rd_reg_id,            //to reg//defualt 0
@@ -42,9 +41,17 @@ module Rob(input wire clk_in,                            // system clock signal
            input wire lsb_ready,                         //from lsb
            output reg lsb_commit,                        //to lsb
            output reg clear_up,                          //wrong_predicted_clear_signal
+           input wire [`ROB_BIT-1:0] get_rob_entry1,     //between rob and reg
+           output wire ready1,
+           output wire [`ROB_BIT-1:0] value1,
+           input wire [`ROB_BIT-1:0] get_rob_entry2,
+           output wire ready2,
+           output wire [`ROB_BIT-1:0] value2,
            );
+           //todo:lsb
+           assign ready1 = busy[get_rob_entry1];
     //todo:广播不一定对齐了
-    parameter UNKNOW = 3'b000,ISSUE = 3'b001,WRITE = 3'b010,COMMIT = 3'b011,TODELETECDB = 3'b100;
+    parameter UNKNOW = 3'b000,ISSUE = 3'b001,WRITE = 3'b010,COMMIT = 3'b011;
     //todo 初始 head = 0,tail = 0
     reg [`ROB_BIT-1:0] head;
     reg [`ROB_BIT-1:0] tail;
@@ -93,7 +100,7 @@ module Rob(input wire clk_in,                            // system clock signal
         //todo else 的条件
         else if (rdy_in)begin
         //todo:full本次填满且head没有提交
-        rob_full <= (tail == head)&&busy[tail];
+        rob_full < = (tail == head)&&busy[tail];
         // ||(tail == head+1&&busy[tail-1]);
         //ISSUE
         if (inst_valid) begin
@@ -108,9 +115,9 @@ module Rob(input wire clk_in,                            // system clock signal
             //todo: 由于部分指令没有issue阶段，记得在合适的地方修改正常指令state
             // state[tail] <= ISSUE;
             //LS
-            state[tail] <= (op_type == `LUI||op_type == `JAL)?WRITE:ISSUE;
+            state[tail] < = (op_type == `LUI||op_type == `JAL)?WRITE:ISSUE;
             
-            if (op_type!= `B_TYPE&&op_type!= `S_TYPE) begin
+            if (op_type! = `B_TYPE&&op_type! = `S_TYPE) begin
                 issue_rd_reg_id  <= rd_id;
                 rob_entry_issued <= tail;
             end
@@ -187,7 +194,7 @@ module Rob(input wire clk_in,                            // system clock signal
                 assert (busy[br_rob_entry] == 1&&state[br_rob_entry] == `ISSUE) else $fatal("Assertion failed: wild br_rob_entry");
                 assert (op_type == `B_TYPE) else $fatal("Assertion failed: br_ready_bd unmatched");
                 state[br_rob_entry] <= WRITE;
-                branch[br_rob_entry] <= (br_value == value[br_rob_entry]);
+                branch[br_rob_entry] < = (br_value == value[br_rob_entry]);
                 value[br_rob_entry] <= br_next_pc;//from bool to pc value
                 //todo:predictor
             end
@@ -210,8 +217,8 @@ module Rob(input wire clk_in,                            // system clock signal
                     branch[head]     <= 0;
                 end
                 
-                //    if ((tmp.state == WRITE&&(tmp.inst.tp!= S_TYPE&&tmp.inst.originalOp!= 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
-                if ((state[head] == `WRITE&&(op_type[head]!= `S_TYPE&&op_type[head]!= `B_TYPE))||(state[head] == `ISSUE&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE))||insts[head] == `END_TYPE)begin
+                //    if ((tmp.state == WRITE&&(tmp.inst.tp! = S_TYPE&&tmp.inst.originalOp! = 3)) || tmp.inst.op == opcode::end||(tmp.state == ISSUE&&(tmp.inst.tp == S_TYPE||tmp.inst.originalOp == 3))) {
+                if ((state[head] == `WRITE&&(op_type[head]! = `S_TYPE&&op_type[head]! = `B_TYPE))||(state[head] == `ISSUE&&(op_type[head] == `S_TYPE||op_type[head] == `B_TYPE))||insts[head] == `END_TYPE)begin
                 //TODO:commit
                     if (op_type[head] == `END_TYPE) begin
                         //todo:END
