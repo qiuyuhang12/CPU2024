@@ -21,9 +21,6 @@ module Rob(input wire clk_in,                            // system clock signal
            output reg jalr_panic,                        //to cdb
            output reg [31:0] lj_issue_value,             //lui/jal
            output reg [`ROB_BIT:0] lj_issue_entry,
-           input wire alu_ready_bd,                      //from alu
-           input wire [`ROB_BIT-1:0] alu_rob_entry,
-           input wire [31:0] alu_value,
            input wire rs_ready_bd,                       //from rs
            input wire [`ROB_BIT-1:0] rs_rob_entry,
            input wire [31:0] rs_value,
@@ -48,8 +45,11 @@ module Rob(input wire clk_in,                            // system clock signal
            output wire ready2,
            output wire [`ROB_BIT-1:0] value2,
            );
-           //todo:lsb
-           assign ready1 = busy[get_rob_entry1];
+    //todo:去掉对lsb的指示
+    assign ready1 = state[get_rob_entry1] == `COMMIT||(rs_ready_bd&&rs_ready_bd == get_rob_entry1)||(lsb_ready_bd&&lsb_ready_bd == get_rob_entry1)||(jal_jalr_ready_bd&&jal_jalr_ready_bd == get_rob_entry1)||(br_ready_bd&&br_ready_bd == get_rob_entry1);
+    assign value1 = state[get_rob_entry1] == `COMMIT?value[get_rob_entry1]:((rs_ready_bd&&rs_ready_bd == get_rob_entry1)?rs_value:((lsb_ready_bd&&lsb_ready_bd == get_rob_entry1)?lsb_value:((jal_jalr_ready_bd&&jal_jalr_ready_bd == get_rob_entry1)?j_next_pc:((br_ready_bd&&br_ready_bd == get_rob_entry1)?br_next_pc:32'h0))));
+    assign ready2 = state[get_rob_entry2] == `COMMIT||(rs_ready_bd&&rs_ready_bd == get_rob_entry2)||(lsb_ready_bd&&lsb_ready_bd == get_rob_entry2)||(jal_jalr_ready_bd&&jal_jalr_ready_bd == get_rob_entry2)||(br_ready_bd&&br_ready_bd == get_rob_entry2);
+    assign value2 = state[get_rob_entry2] == `COMMIT?value[get_rob_entry2]:((rs_ready_bd&&rs_ready_bd == get_rob_entry2)?rs_value:((lsb_ready_bd&&lsb_ready_bd == get_rob_entry2)?lsb_value:((jal_jalr_ready_bd&&jal_jalr_ready_bd == get_rob_entry2)?j_next_pc:((br_ready_bd&&br_ready_bd == get_rob_entry2)?br_next_pc:32'h0))));
     //todo:广播不一定对齐了
     parameter UNKNOW = 3'b000,ISSUE = 3'b001,WRITE = 3'b010,COMMIT = 3'b011;
     //todo 初始 head = 0,tail = 0
