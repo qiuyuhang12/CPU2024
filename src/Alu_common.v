@@ -8,6 +8,7 @@ module Alu_common(input wire clk_in,                             // system clock
                   input wire [31:0] vj,
                   input wire [4:0] imm,
                   input wire [2:0] op,
+                  input wire [6:0] op_type,
                   input wire has_imm,
                   input wire op_addition,
                   input wire [`ROB_BIT-1:0]rob_entry,
