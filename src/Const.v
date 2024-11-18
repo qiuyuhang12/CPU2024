@@ -21,3 +21,8 @@
 
 `define RS_BIT 4 
 `define RS_SIZE (1 << `RS_BIT)
+
+`define ADDR_WIDTH = 17
+
+`define LSB_BIT 3
+`define LSB_SIZE (1 << `LSB_BIT)

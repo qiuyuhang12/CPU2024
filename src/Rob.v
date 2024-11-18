@@ -84,7 +84,6 @@ module Rob(input wire clk_in,                            // system clock signal
             lj_issue_entry   <= 5'h1f;
             lsb_commit       <= 0;
             clear_up         <= 0;
-            
             head <= 0;
             tail <= 0;
             for (int i = 0; i < `ROB_SIZE; i = i + 1) begin

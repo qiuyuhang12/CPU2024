@@ -1,6 +1,6 @@
 `include "Const.v"
 
-module reg(input wire clk_in,                               // system clock signal
+module Rs(input wire clk_in,                               // system clock signal
            input wire rst_in,                               // reset signal
            input wire rdy_in,                               // ready signal, pause cpu when low
            input wire rob_clear_up,
@@ -94,21 +94,21 @@ module reg(input wire clk_in,                               // system clock sign
             for (i = 0; i < `RS_SIZE; i = i + 1) begin
                 if (busy[i]) begin
                     if (lsb_ready)begin
-                        if (rob_entry1 == lsb_rob_entry) begin
+                        if (rob_entry1[i] == lsb_rob_entry) begin
                             reg1_v[i] <= lsb_value;
                         end
                         
-                        if (rob_entry2 == lsb_rob_entry) begin
+                        if (rob_entry2[i] == lsb_rob_entry) begin
                             reg2_v[i] <= lsb_value;
                         end
                     end
                     
                     if (alu_ready) begin
-                        if (rob_entry1 == alu_rob_entry) begin
+                        if (rob_entry1[i] == alu_rob_entry) begin
                             reg1_v[i] <= alu_result;
                         end
                         
-                        if (rob_entry2 == alu_rob_entry) begin
+                        if (rob_entry2[i] == alu_rob_entry) begin
                             reg2_v[i] <= alu_result;
                         end
                     end
@@ -123,8 +123,8 @@ module reg(input wire clk_in,                               // system clock sign
                         op[i]         <= op_in;
                         reg1_v[i]     <= reg1_v_in;
                         reg2_v[i]     <= reg2_v_in;
-                        has_dep1[i]   <= 1'b0;
-                        has_dep2[i]   <= 1'b0;
+                        has_dep1[i]   <= has_dep1_in;
+                        has_dep2[i]   <= has_dep2_in;
                         rob_entry1[i] <= rob_entry1_in;
                         rob_entry2[i] <= rob_entry2_in;
                         rd_rob[i]     <= rd_rob_in;
