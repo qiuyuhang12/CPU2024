@@ -12,9 +12,9 @@ module Cache (input wire clk_in,                      // system clock signal
               input wire work_type,                   // 1 for load, 0 for store;(read: 1, write: 0)
               input wire [2:0] word_size,             // 0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
               input wire [31:0] addr,
-              input wire [31:0] data_in,              //ld
-              output wire data_out_ready,             //st
-              output wire [31:0] data_out,            //st
+              input wire [31:0] data_in,              //st
+              output wire wr_ready,                   //ld st
+              output wire [31:0] data_out,            //ld
               input wire [31:0] pc,                   //decoder
               input wire should_fetch,
               output wire inst_ready,

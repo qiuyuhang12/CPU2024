@@ -1,41 +1,41 @@
 `include "Const.v"
 
 module Rs(input wire clk_in,                               // system clock signal
-           input wire rst_in,                               // reset signal
-           input wire rdy_in,                               // ready signal, pause cpu when low
-           input wire rob_clear_up,
-           input wire issue_signal,                         // from decoder
-           input wire op_type_in,                           // operation type
-           input wire op_in,                                // operation
-           input wire [31:0]reg1_v_in,                      // register 1 value
-           input wire [31:0]reg2_v_in,                      // register 2 value
-           input wire has_dep1_in,                          // has dependency 1
-           input wire has_dep2_in,                          // has dependency 2
-           input wire [`ROB_BITS-1]rob_entry1_in,           // rob entry 1
-           input wire [`ROB_BITS-1]rob_entry2_in,           // rob entry 2
-           input wire [31:0]rd_rob_in,                      // rob entry for destination register
-           input wire [31:0]inst_in,                        // instruction
-           input wire [31:0]inst_addr_in,                   // instruction address
-           input wire isB_in,                               // is branch instruction
-           input wire alu_ready,                            // between reg and alu
-           input reg [`ROB_BIT-1:0] finished_alu_rob_entry,
-           input wire [31:0] alu_result,
-           output reg start_alu,
-           output reg [31:0] vi,
-           output reg [31:0] vj,
-           output reg [2:0] op,
-           output reg [6:0] op_type,
-           output reg op_addition,
-           output reg [`ROB_BIT-1:0] alu_rob_entry,
-           input wire lsb_ready,                            //from lsb
-           input wire [`ROB_BIT-1:0] lsb_rob_entry,
-           input wire [31:0] lsb_value,
-           output wire rs_ready,                            //output
-           output wire [`ROB_BIT-1:0] rs_rob_entry,
-           output wire [31:0] rs_value,
-           output wire [31:0] next_pc,
-           output reg is_full,
-           );
+          input wire rst_in,                               // reset signal
+          input wire rdy_in,                               // ready signal, pause cpu when low
+          input wire rob_clear_up,
+          input wire issue_signal,                         // from decoder
+          input wire op_type_in,                           // operation type
+          input wire op_in,                                // operation
+          input wire [31:0]reg1_v_in,                      // register 1 value
+          input wire [31:0]reg2_v_in,                      // register 2 value
+          input wire has_dep1_in,                          // has dependency 1
+          input wire has_dep2_in,                          // has dependency 2
+          input wire [`ROB_BITS-1]rob_entry1_in,           // rob entry 1
+          input wire [`ROB_BITS-1]rob_entry2_in,           // rob entry 2
+          input wire [31:0]rd_rob_in,                      // rob entry for destination register
+          input wire [31:0]inst_in,                        // instruction
+          input wire [31:0]inst_addr_in,                   // instruction address
+          input wire isB_in,                               // is branch instruction
+          input wire alu_ready,                            // between reg and alu
+          input reg [`ROB_BIT-1:0] finished_alu_rob_entry,
+          input wire [31:0] alu_result,
+          output reg start_alu,
+          output reg [31:0] vi,
+          output reg [31:0] vj,
+          output reg [2:0] op,
+          output reg [6:0] op_type,
+          output reg op_addition,
+          output reg [`ROB_BIT-1:0] alu_rob_entry,
+          input wire lsb_ready,                            //from lsb
+          input wire [`ROB_BIT-1:0] lsb_rob_entry,
+          input wire [31:0] lsb_value,
+          output wire rs_ready,                            //output
+          output wire [`ROB_BIT-1:0] rs_rob_entry,
+          output wire [31:0] rs_value,
+          output wire [31:0] next_pc,
+          output reg is_full,
+          );
     localparam branch_op = 2'b00,common_op = 2'b01,lsj_op = 2'b10;
     
     reg busy [0:`RS_SIZE-1];
@@ -95,21 +95,25 @@ module Rs(input wire clk_in,                               // system clock signa
                 if (busy[i]) begin
                     if (lsb_ready)begin
                         if (rob_entry1[i] == lsb_rob_entry) begin
-                            reg1_v[i] <= lsb_value;
+                            reg1_v[i]   <= lsb_value;
+                            has_dep1[i] <= 1'b0;
                         end
                         
                         if (rob_entry2[i] == lsb_rob_entry) begin
-                            reg2_v[i] <= lsb_value;
+                            reg2_v[i]   <= lsb_value;
+                            has_dep2[i] <= 1'b0;
                         end
                     end
                     
                     if (alu_ready) begin
                         if (rob_entry1[i] == alu_rob_entry) begin
-                            reg1_v[i] <= alu_result;
+                            reg1_v[i]   <= alu_result;
+                            has_dep1[i] <= 1'b0;
                         end
                         
                         if (rob_entry2[i] == alu_rob_entry) begin
-                            reg2_v[i] <= alu_result;
+                            reg2_v[i]   <= alu_result;
+                            has_dep2[i] <= 1'b0;
                         end
                     end
                 end
@@ -149,11 +153,11 @@ module Rs(input wire clk_in,                               // system clock signa
                     disable for_loop;
                 end
             end
-            //broadcast
-            assign rs_ready     = alu_ready;
-            assign rs_rob_entry = finished_alu_rob_entry;
-            assign rs_value     = alu_result;
-            //todo:修改rob里不兼容的next_pc
         end
     end
+    //broadcast
+    assign rs_ready     = alu_ready;
+    assign rs_rob_entry = finished_alu_rob_entry;
+    assign rs_value     = alu_result;
+    //todo:修改rob里不兼容的next_pc
 endmodule
