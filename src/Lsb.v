@@ -10,6 +10,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             output reg [31:0] addr,
             output reg [31:0] data_in,                 //			st
             input wire cache_ready,                    //			ldst
+            input wire is_load,                        //todo
             input wire [31:0] data_out,                //			ld
             input wire issue_signal,                   // from decoder
             input wire op_type_in,                     //			operation type
@@ -29,7 +30,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             input wire rs_ready,                       // from rs
             input wire [`ROB_BIT-1:0] rs_rob_entry,
             input wire [31:0] rs_value,
-            output wire load_ready,                    // to load
+            output wire load_ready,                    // output load value
             output wire [`ROB_BIT-1:0] load_rob_entry,
             output wire [31:0] load_value,
             );
@@ -173,7 +174,7 @@ module Lsb (input wire clk_in,                         // system clock signal
         end
     end
     //broadcast
-    assign load_ready     = cache_ready;
+    assign load_ready     = cache_ready&&is_load;
     assign load_rob_entry = mem_executing_rob;
     assign load_value     = data_out;
 endmodule
