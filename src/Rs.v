@@ -51,7 +51,8 @@ module Rs(input wire clk_in,                        // system clock signal
     wire [`RS_BIT-1:0] to_issue_rs_entry;
     wire ready_to_exe;
     
-    Rs_chooser Rs_chooser_inst(.prepared(prepared),
+    Rs_chooser Rs_chooser_inst(
+    .prepared(prepared),
     .busy(busy),
     .full(is_full),
     .ready(ready_to_exe),
@@ -122,25 +123,13 @@ module Rs(input wire clk_in,                        // system clock signal
                 inst[to_issue_rs_entry]       <= inst_in;
                 inst_addr[to_issue_rs_entry]  <= inst_addr_in;
             end
-            // //execute
+            //execute
             if (ready_to_exe) begin
                 busy[to_exe_rs_entry] <= 1'b0;
             end
         end
     end
-    //broadcast
-    assign rs_ready     = alu_ready;
-    assign rs_rob_entry = finished_alu_rob_entry;
-    assign rs_value     = alu_result;
     //execute
-    assign start_alu     = ready_to_exe;
-    assign vi            = reg1_v[to_exe_rs_entry];
-    assign vj            = reg2_v[to_exe_rs_entry];
-    assign op            = op[to_exe_rs_entry];
-    assign op_type       = op_type[to_exe_rs_entry];
-    assign op_addition   = inst[to_exe_rs_entry][30];
-    assign alu_rob_entry = rd_rob[to_exe_rs_entry];
-    
     Alu alu(
     .clk_in(clk_in),
     .rst_in(rst_in),
@@ -156,14 +145,5 @@ module Rs(input wire clk_in,                        // system clock signal
     .res(rs_value),
     .rob_entry_out(rs_rob_entry)
     );
-    // wire alu_ready,                             // between reg and alu
-    // wire [`ROB_BIT-1:0] finished_alu_rob_entry,
-    // wire [31:0] alu_result,
-    // wire start_alu,
-    // wire [31:0] vi,
-    // wire [31:0] vj,
-    // wire [2:0] op,
-    // wire [6:0] op_type,
-    // wire op_addition,
     
 endmodule
