@@ -116,6 +116,7 @@ module Rob(input wire clk_in,                           // system clock signal
             if (inst == `END_TYPE) begin
                 //todo:end
             end
+            //todo:类lui指令的imm
         end
     end
     end
