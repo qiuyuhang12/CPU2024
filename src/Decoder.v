@@ -69,37 +69,39 @@ module Decoder (input wire clk_in,                   // system clock signal
     .next_pc(pc_predictor_next_pc));
     assign next_pc = wrong_predicted ? correct_pc : pc_predictor_next_pc;
     generate
-    if (op_type == `LUI||op_type == `AUIPC) begin
-        assign imm = {inst[31:12], 12'b0};
-    end
-    else if (op_type == `JAL) begin
-        assign imm = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-    end
-        else if (op_type == `JALR) begin
-        assign imm = {{20{inst[31]}},inst[31:20]};
+    case (op_type)
+        `LUI, `AUIPC: begin
+            assign imm = {inst[31:12], 12'b0};
         end
-        else if (op_type == `B_TYPE) begin
-        assign imm = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
+        `JAL: begin
+            assign imm = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
         end
-        else if (op_type == `LD_TYPE) begin
-        assign imm = {{20{inst[31]}}, inst[31:20]};
-        end
-        else if (op_type == `S_TYPE) begin
-        assign imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
-        end
-        else if (op_type == `ALGI_TYPE) begin
-        if (op == 3'b001||op == 3'b101) begin
+        `JALR: begin
             assign imm = {{20{inst[31]}}, inst[31:20]};
         end
-        else begin
-            assign imm = {{26{inst[25]}}, inst[25:20]};
+        `B_TYPE: begin
+            assign imm = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
         end
+        `LD_TYPE: begin
+            assign imm = {{20{inst[31]}}, inst[31:20]};
         end
-        else if (op_type == `R_TYPE) begin
-        assign imm = 32'h0;
+        `S_TYPE: begin
+            assign imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
         end
-    else begin
-        assign imm = 32'h0;
-    end
+        `ALGI_TYPE: begin
+            if (op == 3'b001 || op == 3'b101) begin
+                assign imm = {{20{inst[31]}}, inst[31:20]};
+            end
+            else begin
+                assign imm = {{26{inst[25]}}, inst[25:20]};
+            end
+        end
+        `R_TYPE: begin
+            assign imm = 32'h0;
+        end
+        default: begin
+            assign imm = 32'h0;
+        end
+    endcase
     endgenerate
 endmodule
