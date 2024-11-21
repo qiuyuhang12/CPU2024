@@ -28,3 +28,5 @@
 `define LSB_SIZE (1 << `LSB_BIT)
 
 //todo:数据丢失？
+
+//todo:store 可以直接提交 不用等完成，但clear可能会有问题

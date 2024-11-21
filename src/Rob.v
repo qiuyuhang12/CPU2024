@@ -69,7 +69,6 @@ module Rob(input wire clk_in,                           // system clock signal
                 insts_addr[i] <= 32'h0;
                 rd[i]         <= 4'h0;
                 value[i]      <= 32'h0;
-                // branch[i]  <= 0;
                 br_predict[i] <= 0;
             end
         end
@@ -98,7 +97,6 @@ module Rob(input wire clk_in,                           // system clock signal
             insts_addr[head] <= 32'h0;
             rd[head]         <= 3'b0;
             value[head]      <= 32'h0;
-            // branch[head]  <= 0;
             br_predict[head] <= 0;
         end
         
@@ -111,12 +109,16 @@ module Rob(input wire clk_in,                           // system clock signal
             insts_addr[tail] <= inst_addr;
             rd[tail]         <= rd_id;
             prepared[tail]   <= op_type == `LUI||op_type == `AUIPC||op_type == `JAL||op_type == `JALR?1:0;
-            value[tail]      <= op_type == `LUI||op_type == `AUIPC?imm:op_type == `JAL||op_type == `JALR?imm:32'h0;
             br_predict		 <= br_predict_in;
             if (inst == `END_TYPE) begin
                 //todo:end
             end
-            //todo:类lui指令的imm
+                case (op_type)
+                    `LUI:value[tail]       <= imm;
+                    `AUIPC:value[tail]     <= imm+inst_addr;
+                    `JAL,`JALR:value[tail] <= inst_addr+4;
+                    default:value[tail]    <= 32'h0;
+                endcase
         end
     end
     end
@@ -129,8 +131,8 @@ module Rob(input wire clk_in,                           // system clock signal
     assign commit_rd_reg_id = rd[head];
     assign commit_rob_entry = head;
     assign commit_value     = value[head];
-	//wrong_predict
-    assign clear_up         = value[head][0]!= br_predict[head];
-    assign next_pc          = value[head][0]?inst_addr[head]+imm[head]:inst_addr[head]+4;
+    //wrong_predict
+    assign clear_up = value[head][0]!= br_predict[head];
+    assign next_pc  = value[head][0]?inst_addr[head]+imm[head]:inst_addr[head]+4;
     
 endmodule

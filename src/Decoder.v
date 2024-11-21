@@ -4,14 +4,15 @@
 module Decoder (input wire clk_in,                   // system clock signal
                 input wire rst_in,                   // reset signal
                 input wire rdy_in,                   // ready signal, pause cpu when low
-                input wire valid,
                 input wire wrong_predicted,          // from rob
                 input wire [31:0] correct_pc,
-                output wire [31:0] next_pc,          // to inst queue
+                output wire [31:0] next_pc,          // to inst fetcher
                 output wire jalr_stall,
-                input wire [31:0] inst_addr,         // from inst queue
+                input wire valid,                    // from inst fetcher
+                input wire [31:0] inst_addr,
                 input wire [31:0] inst,
-                output wire issue_signal,            // to rob inst_queue
+                output wire pc_predictor_next_pc,    // to inst_fetcher
+                output wire issue_signal,            // to rob inst_fetcher
                 output wire issue_signal_rs,         // to rs
                 output wire issue_signal_lsb,        // to lsb
                 output wire [31:0] imm,              //			经过sext/直接issue/br的offset
@@ -60,7 +61,6 @@ module Decoder (input wire clk_in,                   // system clock signal
     assign inst_addr_out = inst_addr;
     assign inst_out      = inst;
     assign jalr_stall    = inst[6:0] == `JALR && has_dep1_;
-    wire pc_predictor_next_pc;
     Pc_predictor Pc_predictor_inst(
     .now_pc(inst_addr),
     .now_inst(inst),

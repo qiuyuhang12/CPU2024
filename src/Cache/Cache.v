@@ -16,7 +16,7 @@ module Cache (input wire clk_in,                      // system clock signal
               output wire to_lsb_ready,               //				ld st
               output wire is_load,
               output wire [31:0] data_out,            //				ld
-              input wire [31:0] pc,                   // between decoder
+              input wire [31:0] pc,                   // between inst fetcher
               input wire should_fetch,
               output wire fetch_ready,
               output wire [31:0] inst,
@@ -31,8 +31,10 @@ module Cache (input wire clk_in,                      // system clock signal
     reg [31:0] load_val;//load/fetch
     reg [31:0] store_val;
     reg [2:0] bytes_remain; // 0 1 2 3
+    wire storing;
+    assign storing = busy && employer == lsb && op_type == `S_TYPE;
     always @(posedge clk_in) begin
-        if (rst_in||rob_clear_up) begin
+        if (rst_in||(rob_clear_up&&!storing)) begin
             busy         <= 0;
             employer     <= 0;
             op_type      <= 0;
@@ -78,6 +80,7 @@ module Cache (input wire clk_in,                      // system clock signal
         end
         else begin
     end
+    //todo:lbu lhu uuuu 
     assign fetch_ready  = busy && employer == decoder && bytes_remain == 0;
     assign inst         = data_out;
     assign inst_addr    = addr_reg;

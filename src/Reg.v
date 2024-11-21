@@ -29,16 +29,16 @@ module Reg(input wire clk_in,                         // system clock signal
     reg dirty [0:31];
     reg [`ROB_BIT:0] rob_entry [0:31];
     wire has_issue1;
-    assign has_issue1 = dirty[get_id1]||(issue_reg_id!= 0&&get_id1 == issue_rob_entry);
-    assign val1       = has_issue1?value1:regs[get_id1];
-    assign has_dep1   = has_issue1&&!ready1;
-    assign dep1       = issue_reg_id==get_id1?issue_rob_entry:rob_entry[get_id1];
+    assign has_issue1     = dirty[get_id1]||(issue_reg_id!= 0&&get_id1 == issue_rob_entry);
+    assign val1           = has_issue1?value1:regs[get_id1];
+    assign has_dep1       = has_issue1&&!ready1;
+    assign dep1           = issue_reg_id == get_id1?issue_rob_entry:rob_entry[get_id1];
     assign get_rob_entry1 = rob_entry[get_id1];
     wire has_issue2;
-    assign has_issue2 = dirty[get_id2]||(issue_reg_id!= 0&&get_id2 == issue_rob_entry);
-    assign val2       = has_issue2?value2:regs[get_id2];
-    assign has_dep2   = has_issue2&&!ready2;
-    assign dep2       = issue_reg_id==get_id2?issue_rob_entry:rob_entry[get_id2];
+    assign has_issue2     = dirty[get_id2]||(issue_reg_id!= 0&&get_id2 == issue_rob_entry);
+    assign val2           = has_issue2?value2:regs[get_id2];
+    assign has_dep2       = has_issue2&&!ready2;
+    assign dep2           = issue_reg_id == get_id2?issue_rob_entry:rob_entry[get_id2];
     assign get_rob_entry2 = rob_entry[get_id2];
     always @(posedge clk_in) begin
         if (rst_in) begin
@@ -59,6 +59,7 @@ module Reg(input wire clk_in,                         // system clock signal
             end
         else begin
             if (commit_reg_id != 0) begin
+                assert commit_reg_id != 0||commit_reg_data == 0 else $display("commit_reg_id = %d, commit_reg_data = %d", commit_reg_id, commit_reg_data);
                 regs[commit_reg_id] <= commit_reg_data;
                 assert dirty[commit_reg_id] == 1;
                 if (rob_entry[commit_reg_id] == commit_rob_entry) begin
