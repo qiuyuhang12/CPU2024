@@ -25,7 +25,7 @@ module Decoder (input wire clk_in,                   // system clock signal
                 output wire [`ROB_BITS-1]rob_entry1, //			rob entry 1
                 output wire [`ROB_BITS-1]rob_entry2, //			rob entry 2
                 output wire [31:0]rd_id,             //			destination register
-                output wire [31:0]rd_rob,            //			rob entry for destination register
+                output wire [`ROB_BIT:0]rd_rob,      //			rob entry for destination register
                 output wire [31:0]inst_out,          //			instruction
                 output wire [31:0]inst_addr_out,     //			instruction address
                 input wire rob_full,                 // from rob
@@ -46,6 +46,8 @@ module Decoder (input wire clk_in,                   // system clock signal
     assign issue_signal_lsb = issue_signal&&(op_type == `LD_TYPE || op_type == `S_TYPE);
     wire no_rs2;
     assign no_rs2        = op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR || op_type == `LD_TYPE || op_type == `ALGI_TYPE;
+    wire no_rd;
+    assign no_rd         = op_type == `BR_TYPE||op_type == `S_TYPE;
     assign op_type       = inst[6:0];
     assign op            = inst[14:12];
     assign get_id1       = inst[19:15];
@@ -56,7 +58,7 @@ module Decoder (input wire clk_in,                   // system clock signal
     assign has_dep2      = no_rs2 ? 0 : has_dep2_;
     assign rob_entry1    = dep1;
     assign rob_entry2    = no_rs2 ? 0 : dep2;
-    assign rd_id         = inst[11:7];
+    assign rd_id         = no_rd?0:inst[11:7];
     assign rd_rob        = rob_tail;
     assign inst_addr_out = inst_addr;
     assign inst_out      = inst;

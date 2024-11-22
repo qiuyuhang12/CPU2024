@@ -18,7 +18,6 @@ module Rs(input wire clk_in,                        // system clock signal
           input wire [31:0]rd_rob_in,               //			rob entry for destination register
           input wire [31:0]inst_in,                 //			instruction
           input wire [31:0]inst_addr_in,            //			instruction address
-          output wire [`ROB_BIT-1:0] alu_rob_entry,
           input wire lsb_ready,                     //from lsb
           input wire [`ROB_BIT-1:0] lsb_rob_entry,
           input wire [31:0] lsb_value,
@@ -96,13 +95,13 @@ module Rs(input wire clk_in,                        // system clock signal
                     end
                     
                     if (alu_ready) begin
-                        if (rob_entry1[i] == alu_rob_entry) begin
-                            reg1_v[i]   <= alu_result;
+                        if (rob_entry1[i] == rs_rob_entry) begin
+                            reg1_v[i]   <= rs_value;
                             has_dep1[i] <= 1'b0;
                         end
                         
-                        if (rob_entry2[i] == alu_rob_entry) begin
-                            reg2_v[i]   <= alu_result;
+                        if (rob_entry2[i] == rs_rob_entry) begin
+                            reg2_v[i]   <= rs_value;
                             has_dep2[i] <= 1'b0;
                         end
                     end

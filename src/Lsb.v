@@ -5,8 +5,8 @@ module Lsb (input wire clk_in,                         // system clock signal
             input wire rdy_in,                         // ready signal, pause cpu when low
             input wire rob_clear_up,
             output reg lsb_visit_mem,                  // cache
-            output reg work_type,                      // 			1 for load, 0 for store;(read: 1, write: 0)
-            output reg [2:0] word_size,                // 			0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
+            output reg [6:0] op_type_out,              // 			1 for load, 0 for store;(read: 1, write: 0)
+            output reg [2:0] op_out,                   // 			0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
             output reg [31:0] addr,
             output reg [31:0] data_in,                 //			st
             input wire cache_ready,                    //			ldst
@@ -162,8 +162,8 @@ module Lsb (input wire clk_in,                         // system clock signal
                 // todo:assert rob!empty
                 if (first_rob_entry == rob_entry_rd[head]||op_type == `LD_TYPE) begin
                     lsb_visit_mem     <= 1;
-                    work_type         <= op_type[head][5];
-                    word_size         <= op[head];
+                    op_type_out       <= op_type[head];
+                    op_out            <= op[head];
                     addr              <= reg1_v[head]+imm[head];
                     data_in           <= reg2_v[head];
                     mem_executing     <= 1;

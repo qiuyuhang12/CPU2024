@@ -17,7 +17,8 @@ module Rob(input wire clk_in,                           // system clock signal
            input wire br_predict_in,                    //					1 jump, 0 not jump
            input wire [6:0]op_type,                     //					大
            input wire [2:0]op,                          //					小
-           output wire [4:0] issue_reg_id,              // to reg			/issue 			to reg//defualt 0
+           output wire rob_issue_reg,                   // to reg			/issue 			to reg//defualt 0
+           output wire [4:0] issue_reg_id,              //      			/issue 			to reg//defualt 0
            output wire [31:0] issue_rob_entry,
            output wire rob_commit,                      //					/commit			to reg//defualt 0
            output wire [4:0] commit_rd_reg_id,
@@ -124,6 +125,7 @@ module Rob(input wire clk_in,                           // system clock signal
     end
     
     //issue pollution
+    assign rob_issue_reg   = busy[tail]&&prepared[tail]&&op_type!= `B_TYPE&&op_type!= `S_TYPE;
     assign issue_reg_id    = rd[tail];
     assign issue_rob_entry = tail;
     //COMMIT
