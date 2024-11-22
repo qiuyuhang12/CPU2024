@@ -2,30 +2,29 @@
 `include "Rs_chooser.v"
 `include "Alu.v"
 
-module Rs(input wire clk_in,                        // system clock signal
-          input wire rst_in,                        // reset signal
-          input wire rdy_in,                        // ready signal, pause cpu when low
+module Rs(input wire clk_in,                       // system clock signal
+          input wire rst_in,                       // reset signal
+          input wire rdy_in,                       // ready signal, pause cpu when low
           input wire rob_clear_up,
-          input wire issue_signal,                  // from decoder
-          input wire op_type_in,                    //			operation type
-          input wire op_in,                         //			operation
-          input wire [31:0]reg1_v_in,               //			register 1 value
-          input wire [31:0]reg2_v_in,               //			register 2 value
-          input wire has_dep1_in,                   //			has dependency 1
-          input wire has_dep2_in,                   //			has dependency 2
-          input wire [`ROB_BITS-1]rob_entry1_in,    //			rob entry 1
-          input wire [`ROB_BITS-1]rob_entry2_in,    //			rob entry 2
-          input wire [31:0]rd_rob_in,               //			rob entry for destination register
-          input wire [31:0]inst_in,                 //			instruction
-          input wire [31:0]inst_addr_in,            //			instruction address
-          input wire lsb_ready,                     //from lsb
+          input wire issue_signal,                 // from decoder
+          input wire op_type_in,                   //			operation type
+          input wire op_in,                        //			operation
+          input wire [31:0]reg1_v_in,              //			register 1 value
+          input wire [31:0]reg2_v_in,              //			register 2 value
+          input wire has_dep1_in,                  //			has dependency 1
+          input wire has_dep2_in,                  //			has dependency 2
+          input wire [`ROB_BITS-1]rob_entry1_in,   //			rob entry 1
+          input wire [`ROB_BITS-1]rob_entry2_in,   //			rob entry 2
+          input wire [31:0]rd_rob_in,              //			rob entry for destination register
+          input wire [31:0]inst_in,                //			instruction
+          input wire [31:0]inst_addr_in,           //			instruction address
+          input wire lsb_ready,                    //from lsb
           input wire [`ROB_BIT-1:0] lsb_rob_entry,
           input wire [31:0] lsb_value,
-          output wire rs_ready,                     //output
+          output wire rs_ready,                    //output
           output reg [`ROB_BIT-1:0] rs_rob_entry,
           output reg [31:0] rs_value,
-          output wire is_full,
-          );
+          output wire is_full);
     reg busy [0:`RS_SIZE-1];
     reg [6:0] op_type [0:`RS_SIZE-1];//[6:0]
     reg [2:0] op [0:`RS_SIZE-1];//[14:12]

@@ -11,7 +11,8 @@ module Decoder (input wire clk_in,                   // system clock signal
                 input wire valid,                    // from inst fetcher
                 input wire [31:0] inst_addr,
                 input wire [31:0] inst,
-                output wire pc_predictor_next_pc,    // to inst_fetcher
+                input wire start_decoder,            // start decoder
+                output wire br_predict,              // to rob
                 output wire issue_signal,            // to rob inst_fetcher
                 output wire issue_signal_rs,         // to rs
                 output wire issue_signal_lsb,        // to lsb
@@ -19,7 +20,7 @@ module Decoder (input wire clk_in,                   // system clock signal
                 output wire [6:0] op_type,           //			operation type
                 output wire [2:0] op,                //			operation
                 output wire [31:0]reg1_v,            //			register 1 value
-                output wire [31:0]reg2_v,            //			register 2 value//todo, 有的是imm
+                output wire [31:0]reg2_v,            //			register 2 value
                 output wire has_dep1,                //			has dependency 1
                 output wire has_dep2,                //			has dependency 2
                 output wire [`ROB_BITS-1]rob_entry1, //			rob entry 1
@@ -39,13 +40,13 @@ module Decoder (input wire clk_in,                   // system clock signal
                 output wire [4:0] get_id2,
                 input wire [31:0] val2,
                 input wire has_dep2_,                //			has dependency 2
-                input wire [`ROB_BIT - 1:0] dep2,
-                );
-    assign issue_signal     = !wrong_predicted&&!jalr_stall&&valid && !rob_full && !rs_full && !lsb_full;
+                input wire [`ROB_BIT - 1:0] dep2);
+    assign br_predict       = op_type == `BR_TYPE;
+    assign issue_signal     = start_decoder&&!wrong_predicted&&!jalr_stall&&valid && !rob_full && !rs_full && !lsb_full;
     assign issue_signal_rs  = issue_signal&&(op_type == `ALGI_TYPE || op_type == `R_TYPE||op_type == `BR_TYPE);
     assign issue_signal_lsb = issue_signal&&(op_type == `LD_TYPE || op_type == `S_TYPE);
     wire no_rs2;
-    assign no_rs2        = op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR || op_type == `LD_TYPE || op_type == `ALGI_TYPE;
+    assign no_rs2 = op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR || op_type == `LD_TYPE || op_type == `ALGI_TYPE;
     wire no_rd;
     assign no_rd         = op_type == `BR_TYPE||op_type == `S_TYPE;
     assign op_type       = inst[6:0];
@@ -63,6 +64,7 @@ module Decoder (input wire clk_in,                   // system clock signal
     assign inst_addr_out = inst_addr;
     assign inst_out      = inst;
     assign jalr_stall    = inst[6:0] == `JALR && has_dep1_;
+    wire pc_predictor_next_pc;
     Pc_predictor Pc_predictor_inst(
     .now_pc(inst_addr),
     .now_inst(inst),

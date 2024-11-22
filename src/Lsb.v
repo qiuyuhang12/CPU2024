@@ -32,8 +32,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             input wire [31:0] rs_value,
             output wire ls_ready,                      // output load value
             output wire [`ROB_BIT-1:0] ls_rob_entry,
-            output wire [31:0] load_value,
-            );
+            output wire [31:0] load_value);
     parameter LEISURE = 2'b00, ISSUED = 2'b01, EXECUTING = 2'b11;
     reg [`ROB_BIT-1:0] head;
     reg [`ROB_BIT-1:0] tail;
@@ -159,7 +158,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             end
             
             if (busy[head]&&!has_dep1[head]&&!has_dep2[head]&&!mem_executing) begin
-                // todo:assert rob!empty
+                assert(!rob_empty);
                 if (first_rob_entry == rob_entry_rd[head]||op_type == `LD_TYPE) begin
                     lsb_visit_mem     <= 1;
                     op_type_out       <= op_type[head];

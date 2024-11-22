@@ -41,7 +41,6 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
             if (!active_inst_unissued) begin
                 $fatal("active_inst_unissued");
             end
-            pc                   <= next_pc;
             start_fetch          <= 0;
             start_decode         <= fetch_ready;
             inst_addr_out        <= inst_addr;
@@ -49,6 +48,7 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
             active_inst_unissued <= 1;
             end
             else if (issue_signal) begin
+            pc                   <= next_pc;
             start_fetch          <= 1;
             active_inst_unissued <= 0;
             end

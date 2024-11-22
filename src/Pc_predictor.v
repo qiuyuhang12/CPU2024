@@ -4,8 +4,7 @@ module Pc_predictor (input wire [31:0] now_pc,
                      input wire [31:0] now_inst,
                      input wire [31:0] val1,
                      input wire [31:0] imm,
-                     output wire [31:0] next_pc,
-                     );
+                     output wire [31:0] next_pc);
 generate
 case (now_inst[6:0])
     `JAL: begin

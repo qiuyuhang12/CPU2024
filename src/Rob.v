@@ -18,7 +18,7 @@ module Rob(input wire clk_in,                           // system clock signal
            input wire [6:0]op_type,                     //					大
            input wire [2:0]op,                          //					小
            output wire rob_issue_reg,                   // to reg			/issue 			to reg//defualt 0
-           output wire [4:0] issue_reg_id,              //      			/issue 			to reg//defualt 0
+           output wire [4:0] issue_reg_id,              // 			/issue 			to reg//defualt 0
            output wire [31:0] issue_rob_entry,
            output wire rob_commit,                      //					/commit			to reg//defualt 0
            output wire [4:0] commit_rd_reg_id,
@@ -35,8 +35,7 @@ module Rob(input wire clk_in,                           // system clock signal
            output wire [`ROB_BIT-1:0] value1,
            input wire [`ROB_BIT-1:0] get_rob_entry2,
            output wire ready2,
-           output wire [`ROB_BIT-1:0] value2,
-           );
+           output wire [`ROB_BIT-1:0] value2);
     assign ready1 = prepared[get_rob_entry1] || (rs_ready_bd&&rs_ready_bd == get_rob_entry1) ||(lsb_ready_bd&&lsb_ready_bd == get_rob_entry1);
     assign value1 = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd&&rs_ready_bd == get_rob_entry1)?rs_value:((lsb_ready_bd&&lsb_ready_bd == get_rob_entry1)?lsb_value:32'h0));
     assign ready2 = prepared[get_rob_entry2] || (rs_ready_bd&&rs_ready_bd == get_rob_entry2)||(lsb_ready_bd&&lsb_ready_bd == get_rob_entry2);
@@ -55,13 +54,8 @@ module Rob(input wire clk_in,                           // system clock signal
     reg [2:0] rd[0:`ROB_SIZE-1];
     reg [31:0] value[0:`ROB_SIZE-1];//value->rd | br is true
     reg br_predict;
-    //todo:有些东西每个周期都要恢复默认
     always @(posedge clk_in)
     begin
-        if (rst_in) begin
-            //todo?
-        end
-        
         if (rst_in||(clear_up&&rdy_in)) begin
             for (int i = 0; i < `ROB_SIZE; i = i + 1) begin
                 busy[i]       <= 1'b0;
@@ -73,8 +67,10 @@ module Rob(input wire clk_in,                           // system clock signal
                 br_predict[i] <= 0;
             end
         end
-        //todo else 的条件
-        else if (rdy_in)begin
+        else if (!rdy_in) begin
+            // do nothing
+        end
+        else begin
         
         // RECIEVE BROADCAST
         if (rs_ready_bd) begin
@@ -109,7 +105,7 @@ module Rob(input wire clk_in,                           // system clock signal
             insts[tail]      <= inst;
             insts_addr[tail] <= inst_addr;
             rd[tail]         <= rd_id;
-            prepared[tail]   <= op_type == `LUI||op_type == `AUIPC||op_type == `JAL||op_type == `JALR?1:0;
+            prepared[tail]   < = op_type == `LUI||op_type == `AUIPC||op_type == `JAL||op_type == `JALR?1:0;
             br_predict		 <= br_predict_in;
             if (inst == `END_TYPE) begin
                 //todo:end
@@ -125,16 +121,16 @@ module Rob(input wire clk_in,                           // system clock signal
     end
     
     //issue pollution
-    assign rob_issue_reg   = busy[tail]&&prepared[tail]&&op_type!= `B_TYPE&&op_type!= `S_TYPE;
+    assign rob_issue_reg   = busy[tail]&&prepared[tail]&&op_type!   = `B_TYPE&&op_type!   = `S_TYPE;
     assign issue_reg_id    = rd[tail];
     assign issue_rob_entry = tail;
     //COMMIT
-    assign rob_commit       = busy[head]&&prepared[head]&&op_type!= `B_TYPE&&op_type!= `S_TYPE;
+    assign rob_commit       = busy[head]&&prepared[head]&&op_type!       = `B_TYPE&&op_type!       = `S_TYPE;
     assign commit_rd_reg_id = rd[head];
     assign commit_rob_entry = head;
     assign commit_value     = value[head];
     //wrong_predict
-    assign clear_up = value[head][0]!= br_predict[head];
+    assign clear_up = value[head][0]! = br_predict[head];
     assign next_pc  = value[head][0]?inst_addr[head]+imm[head]:inst_addr[head]+4;
     
 endmodule

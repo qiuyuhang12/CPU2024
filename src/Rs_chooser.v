@@ -5,8 +5,7 @@ module Rs_chooser (input wire prepared[0:`RS_SIZE-1],
                    output wire full,
                    output wire ready,
                    output wire [`RS_BIT-1:0] rs_entry,
-                   output wire [`RS_BIT-1:0] issue_entry,
-                   );
+                   output wire [`RS_BIT-1:0] issue_entry);
 wire [`RS_BIT-1:0] prepared_tree[1:2*`RS_SIZE-1];
 wire [`RS_BIT-1:0] leisure_tree[1:2*`RS_SIZE-1];
 generate
@@ -21,8 +20,8 @@ for (j = 1; j < `RS_SIZE; j = j + 1) begin
     assign leisure_tree[j]  = leisure_tree[j<<1]?leisure_tree[j<<1]:leisure_tree[j<<1|1];
 end
 endgenerate
-assign ready    = prepared_tree[1]?1:0;
-assign rs_entry = prepared_tree[1]-1;
-assign full     = leisure_tree[1]?0:1;
+assign ready       = prepared_tree[1]?1:0;
+assign rs_entry    = prepared_tree[1]-1;
+assign full        = leisure_tree[1]?0:1;
 assign issue_entry = leisure_tree[1]-1;
 endmodule

@@ -1,8 +1,8 @@
 `include "Const.v"
 
-module Alu(input wire clk_in,                       // system clock signal
-           input wire rst_in,                       // reset signal
-           input wire rdy_in,                       // ready signal, pause cpu when low
+module Alu(input wire clk_in,                        // system clock signal
+           input wire rst_in,                        // reset signal
+           input wire rdy_in,                        // ready signal, pause cpu when low
            input wire valid,
            input wire [31:0] vi,
            input wire [31:0] vj,
@@ -12,8 +12,7 @@ module Alu(input wire clk_in,                       // system clock signal
            input wire [`ROB_BIT-1:0]rob_entry,
            output reg ready,
            output reg [31:0] res,
-           output reg [`ROB_BIT-1:0] rob_entry_out,
-           );
+           output reg [`ROB_BIT-1:0] rob_entry_out);
     localparam AddSub = 3'b000, Sll = 3'b001, Slt = 3'b010, Sltu = 3'b011, Xor = 3'b100, SrlSra = 3'b101, Or = 3'b110, And = 3'b111;
     
     localparam Beq = 3'b000, Bne = 3'b001, Blt = 3'b100, Bge = 3'b101, Bltu = 3'b110, Bgeu = 3'b111;
@@ -48,12 +47,12 @@ module Alu(input wire clk_in,                       // system clock signal
                 else if (op_type == 7'b1100011)
                 begin
                     case (op)
-                        Beq : res <= vi == vj;
-                        Bne : res <= vi != vj;
+                        Beq : res < = vi == vj;
+                        Bne : res < = vi ! = vj;
                         Blt : res <= $signed(vi) < $signed(vj);
-                        Bge : res <= $signed(vi) >= $signed(vj);
+                        Bge : res < = $signed(vi) > = $signed(vj);
                         Bltu: res <= $unsigned(vi) < $unsigned(vj);
-                        Bgeu: res <= $unsigned(vi) >= $unsigned(vj);
+                        Bgeu: res < = $unsigned(vi) > = $unsigned(vj);
                     endcase
                 end
                 else begin

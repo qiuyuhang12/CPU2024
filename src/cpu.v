@@ -31,8 +31,15 @@ module cpu(input wire clk_in,               // system clock signal
     wire rs_ready;
     wire [31:0] rs_value;
     wire [`ROB_BIT-1:0] rs_rob_entry;
-    //fetch(pre_issue)
+    //fetch(visit_mem)(inst_fetcher&cache)
     wire should_fetch;
+    wire [31:0] pc;
+    wire [31:0] fetch_next_pc0;
+    wire [31:0] fetch_inst0;
+    wire [31:0] fetch_inst_addr0;
+    //fetch(pre_issue)(inst_fetcher&decoder)
+    wire start_decode;
+    wire [31:0] next_pc;
     wire fetch_ready;
     wire jalr_stall;
     wire [31:0] fetch_next_pc;
@@ -46,10 +53,11 @@ module cpu(input wire clk_in,               // system clock signal
     wire fetch_has_dep2;
     wire [`ROB_BIT-1:0] fetch_rob_entry1;
     wire [`ROB_BIT-1:0] fetch_rob_entry2;
-    //issue
+    //issue(decoder&rob...)
     wire issue_signal;
     wire issue_signal_rs;
     wire issue_signal_lsb;
+    wire br_predict;
     wire [31:0] inst;
     wire [31:0] inst_addr;
     wire [6:0] op_type;
@@ -95,7 +103,6 @@ module cpu(input wire clk_in,               // system clock signal
     wire [2:0] lsb_op;
     wire cache_ready;
     wire is_load;
-
     
     Cache cache_inst (
     .clk_in(clk_in),          // input
@@ -114,11 +121,11 @@ module cpu(input wire clk_in,               // system clock signal
     .to_lsb_ready(cache_ready),  // output
     .is_load(is_load),           // output
     .data_out(lsb_load_value)    // output
-    .pc(),              // input
-    .should_fetch(),    // input
-    .fetch_ready(),     // output
-    .inst(),            // output
-    .inst_addr()        // output
+    .pc(pc),              // input
+    .should_fetch(should_fetch),    // input
+    .fetch_ready(fetch_ready),     // output
+    .inst(fetch_inst0),            // output
+    .inst_addr(fetch_inst_addr0)        // output
     );
     Decoder decoder_inst (
     .clk_in(clk_in),             // input: system clock signal
@@ -126,12 +133,13 @@ module cpu(input wire clk_in,               // system clock signal
     .rdy_in(rdy_in),             // input: ready signal, pause cpu when low
     .wrong_predicted(rob_clear_up),          // input: from rob
     .correct_pc(clear_next_pc),               // input: [31:0]
-    .next_pc(),                  // output: [31:0] to inst fetcher
-    .jalr_stall(),               // output
-    .valid(),                    // input: from inst fetcher
-    .inst_addr(),                // input: [31:0]
-    .inst(),                     // input: [31:0]
-    .pc_predictor_next_pc(),     // output: to inst_fetcher
+    .next_pc(next_pc),                  // output: [31:0] to inst fetcher
+    .jalr_stall(jalr_stall),               // output
+    .valid(fetch_ready),                    // input: from inst fetcher
+    .inst_addr(fetch_inst_addr),                // input: [31:0]
+    .inst(fetch_inst),                     // input: [31:0]
+    .start_decoder(start_decode),              // input: start decoder
+    .br_predict(br_predict),                    // output: to rob
     .issue_signal(issue_signal),             // output: to rob inst_fetcher
     .issue_signal_rs(issue_signal_rs),          // output: to rs
     .issue_signal_lsb(issue_signal_lsb),         // output: to lsb
@@ -139,7 +147,7 @@ module cpu(input wire clk_in,               // system clock signal
     .op_type(op_type),                  // output: [6:0] operation type
     .op(op),                       // output: [2:0] operation
     .reg1_v(reg1_v),                   // output: [31:0] register 1 value
-    .reg2_v(reg2_v),                   // output: [31:0] register 2 value //todo, 有的是imm
+    .reg2_v(reg2_v),                   // output: [31:0] register 2 value
     .has_dep1(has_dep1),                 // output: has dependency 1
     .has_dep2(has_dep2),                 // output: has dependency 2
     .rob_entry1(rob_entry1),               // output: [`ROB_BITS-1] rob entry 1
@@ -167,16 +175,16 @@ module cpu(input wire clk_in,               // system clock signal
     .rdy_in(rdy_in),               // input: ready signal, pause cpu when low
     .rob_clear_up(rob_clear_up),         // input
     .rob_next_pc(clear_next_pc),          // input: [31:0]
-    .pc(),                   // output: [31:0] between cache
-    .start_fetch(),          // output
-    .fetch_ready(),          // input
-    .inst(),                 // input: [31:0]
-    .inst_addr(),            // input: [31:0]
-    .start_decode(),         // output: between decoder
-    .inst_addr_out(inst_addr),        // output: [31:0] between decoder
-    .inst_out(inst),             // output: [31:0]
-    .pc_predictor_next_pc(), // input
-    .issue_signal()          // input
+    .pc(pc),                   // output: [31:0] between cache
+    .start_fetch(should_fetch),          // output
+    .fetch_ready(fetch_ready),          // input
+    .inst(fetch_inst0),                 // input: [31:0]
+    .inst_addr(fetch_inst_addr0),            // input: [31:0]
+    .start_decode(start_decode),         // output: between decoder
+    .inst_addr_out(fetch_inst_addr),        // output: [31:0] between decoder
+    .inst_out(fetch_inst),             // output: [31:0]
+    .pc_predictor_next_pc(next_pc), // input
+    .issue_signal(issue_signal)          // input
     );
     Lsb lsb_inst (
     .clk_in(clk_in),                         // input: system clock signal
@@ -255,7 +263,7 @@ module cpu(input wire clk_in,               // system clock signal
     .inst(inst),                             // input: [31:0]
     .rd_id(rd_id),                            // input: [`REG_BIT - 1:0]
     .imm(imm),                              // input: [31:0] 经过sext/直接issue/br的offset
-    .br_predict_in(),                    // input: 1 jump, 0 not jump
+    .br_predict_in(br_predict),                    // input: 1 jump, 0 not jump
     .op_type(op_type),                          // input: [6:0] 大
     .op(op),                               // input: [2:0] 小
     .rob_issue_reg(rob_issue_reg_signal),                     // output: /issue to reg //default 0

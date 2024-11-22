@@ -80,14 +80,34 @@ module Cache (input wire clk_in,                      // system clock signal
         end
         else begin
     end
-    //todo:lbu lhu uuuu 
     assign fetch_ready  = busy && employer == decoder && bytes_remain == 0;
     assign inst         = data_out;
     assign inst_addr    = addr_reg;
     assign to_lsb_ready = busy && employer == lsb && bytes_remain == 0;
-    assign data_out     = load_val;
     assign is_load      = op_type == `LD_TYPE;
     assign ram_rw       = !busy || employer == decoder || employer == lsb&&op_type == `LD_TYPE;
     assign ram_addr     = addr_reg+4-bytes_remain;//todo 位运算
     assign ram_in       = bytes_remain?store_val[bytes_remain<<3-1:bytes_remain<<3-7]:0;
+    // assign data_out  = load_val;
+    generate
+    case (op)
+        3'b000: begin
+            assign data_out = {{24{load_val[7]}},load_val[7:0]};
+        end
+        3'b001: begin
+            assign data_out = {{16{load_val[15]}},load_val[15:0]};
+        end
+        3'b010: begin
+            assign data_out = load_val;
+        end
+        3'b100: begin
+            assign data_out = {24'b0,load_val[7:0]};
+        end
+        3'b101: begin
+            assign data_out = {16'b0,load_val[15:0]};
+        end
+        default:
+        assign data_out = 0;
+    endcase
+    endgenerate
 endmodule
