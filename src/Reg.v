@@ -29,17 +29,18 @@ module Reg(input wire clk_in,                         // system clock signal
     reg dirty [0:31];
     reg [`ROB_BIT:0] rob_entry [0:31];
     wire has_issue1;
-    assign has_issue1     = dirty[get_id1]||(issue_reg_id!     = 0&&get_id1 == issue_rob_entry);
+    assign has_issue1     = dirty[get_id1]||(issue_reg_id!= 0&&get_id1 == issue_rob_entry);
     assign val1           = has_issue1?value1:regs[get_id1];
     assign has_dep1       = has_issue1&&!ready1;
     assign dep1           = issue_reg_id == get_id1?issue_rob_entry:rob_entry[get_id1];
     assign get_rob_entry1 = rob_entry[get_id1];
     wire has_issue2;
-    assign has_issue2     = dirty[get_id2]||(issue_reg_id!     = 0&&get_id2 == issue_rob_entry);
+    assign has_issue2     = dirty[get_id2]||(issue_reg_id!= 0&&get_id2 == issue_rob_entry);
     assign val2           = has_issue2?value2:regs[get_id2];
     assign has_dep2       = has_issue2&&!ready2;
     assign dep2           = issue_reg_id == get_id2?issue_rob_entry:rob_entry[get_id2];
     assign get_rob_entry2 = rob_entry[get_id2];
+    integer i;
     always @(posedge clk_in) begin
         if (rst_in) begin
             for (i = 0; i < 32; i = i + 1) begin
@@ -58,17 +59,21 @@ module Reg(input wire clk_in,                         // system clock signal
             end
             end
         else begin
-            if (rob_commit_reg&&commit_reg_id ! = 0) begin
-                assert commit_reg_id ! = 0||commit_reg_data == 0 else $display("commit_reg_id = %d, commit_reg_data = %d", commit_reg_id, commit_reg_data);
+            if (rob_commit_reg&&commit_reg_id != 0) begin
+                if (!(commit_reg_id != 0 || commit_reg_data == 0)) begin
+                    $display("commit_reg_id = %d, commit_reg_data = %d", commit_reg_id, commit_reg_data);
+                end
                 regs[commit_reg_id] <= commit_reg_data;
-                assert dirty[commit_reg_id] == 1;
+                if (dirty[commit_reg_id] != 1) begin
+                    $fatal("Assertion failed: dirty[commit_reg_id] should be 1");
+                end
                 if (rob_entry[commit_reg_id] == commit_rob_entry) begin
                     dirty[commit_reg_id]     <= 0;
                     rob_entry[commit_reg_id] <= 0;
                 end
             end
             
-            if (rob_issue_reg&&issue_reg_id ! = 0) begin
+            if (rob_issue_reg&&issue_reg_id != 0) begin
                 dirty[issue_reg_id]     <= 1;
                 rob_entry[issue_reg_id] <= issue_rob_entry;
             end

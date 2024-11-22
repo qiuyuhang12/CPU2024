@@ -21,7 +21,6 @@ module Alu(input wire clk_in,                        // system clock signal
             ready         <= 1'b0;
             rob_entry_out <= 0;
             res           <= 0;
-            isAddr        <= 1'b0;
         end
         else if (!rdy_in)begin
         end
@@ -34,12 +33,12 @@ module Alu(input wire clk_in,                        // system clock signal
             if (valid)begin
                 if (op_type == 7'b0010011||op_type == 7'b0110011) begin
                     case(op)
-                        AddSub:op_addition ? res <= vi - vj : res <= vi + vj;
-                        Sll   :res               <= vi << vj[4:0];
-                        Slt   :res               <= $signed(vi) < $signed(vj);
-                        Sltu  :res               <= $unsigned(vi) < $unsigned(vj);
-                        Xor   :res               <= vi ^ vj;
-                        SrlSra:op_addition ? $signed(vi) >>> vj[4:0] : vi >> vj[4:0];
+                        AddSub:res <= op_addition ? vi - vj :  vi + vj;
+                        Sll   :res <= vi << vj[4:0];
+                        Slt   :res <= $signed(vi) < $signed(vj);
+                        Sltu  :res <= $unsigned(vi) < $unsigned(vj);
+                        Xor   :res <= vi ^ vj;
+                        SrlSra:res <= op_addition ? $signed(vi) >>> vj[4:0] : vi >> vj[4:0];
                         Or    :res <= vi | vj;
                         And   :res <= vi & vj;
                     endcase
@@ -47,16 +46,16 @@ module Alu(input wire clk_in,                        // system clock signal
                 else if (op_type == 7'b1100011)
                 begin
                     case (op)
-                        Beq : res < = vi == vj;
-                        Bne : res < = vi ! = vj;
+                        Beq : res <= vi == vj;
+                        Bne : res <= vi != vj;
                         Blt : res <= $signed(vi) < $signed(vj);
-                        Bge : res < = $signed(vi) > = $signed(vj);
+                        Bge : res <= $signed(vi) >= $signed(vj);
                         Bltu: res <= $unsigned(vi) < $unsigned(vj);
-                        Bgeu: res < = $unsigned(vi) > = $unsigned(vj);
+                        Bgeu: res <= $unsigned(vi) >= $unsigned(vj);
                     endcase
                 end
                 else begin
-                    assert (0) else $display("Alu: op_type not supported");
+                    $display("Alu: op_type not supported");
                 end
             end
         end

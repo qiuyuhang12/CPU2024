@@ -13,8 +13,8 @@ module Rs(input wire clk_in,                       // system clock signal
           input wire [31:0]reg2_v_in,              //			register 2 value
           input wire has_dep1_in,                  //			has dependency 1
           input wire has_dep2_in,                  //			has dependency 2
-          input wire [`ROB_BITS-1]rob_entry1_in,   //			rob entry 1
-          input wire [`ROB_BITS-1]rob_entry2_in,   //			rob entry 2
+          input wire [`ROB_BIT-1:0]rob_entry1_in,   //			rob entry 1
+          input wire [`ROB_BIT-1:0]rob_entry2_in,   //			rob entry 2
           input wire [31:0]rd_rob_in,              //			rob entry for destination register
           input wire [31:0]inst_in,                //			instruction
           input wire [31:0]inst_addr_in,           //			instruction address
@@ -32,9 +32,9 @@ module Rs(input wire clk_in,                       // system clock signal
     reg [31:0] reg2_v [0:`RS_SIZE-1];
     reg has_dep1 [0:`RS_SIZE-1];
     reg has_dep2 [0:`RS_SIZE-1];
-    reg [`ROB_BITS-1:0] rob_entry1 [0:`RS_SIZE-1];
-    reg [`ROB_BITS-1:0] rob_entry2 [0:`RS_SIZE-1];
-    reg [`ROB_BITS-1:0] rd_rob [0:`RS_SIZE-1];
+    reg [`ROB_BIT-1:0] rob_entry1 [0:`RS_SIZE-1];
+    reg [`ROB_BIT-1:0] rob_entry2 [0:`RS_SIZE-1];
+    reg [`ROB_BIT-1:0] rd_rob [0:`RS_SIZE-1];
     reg [31:0] inst[0:`RS_SIZE-1];
     reg [31:0] inst_addr[0:`RS_SIZE-1];
     wire prepared[0:`RS_SIZE-1];
@@ -48,10 +48,21 @@ module Rs(input wire clk_in,                       // system clock signal
     wire [`RS_BIT-1:0] to_exe_rs_entry;
     wire [`RS_BIT-1:0] to_issue_rs_entry;
     wire ready_to_exe;
-    
+    // 定义打包数组
+    wire [`RS_SIZE-1:0] prepared_packed;
+    wire [`RS_SIZE-1:0] busy_packed;
+
+    // 将未打包数组转换为打包数组
+    generate
+    genvar j;
+        for (j = 0; j < `RS_SIZE; j = j + 1) begin : pack_arrays
+            assign prepared_packed[j] = prepared[j];
+            assign busy_packed[j] = busy[j];
+        end
+    endgenerate
     Rs_chooser Rs_chooser_inst(
-    .prepared(prepared),
-    .busy(busy),
+    .prepared(prepared_packed),
+    .busy(busy_packed),
     .full(is_full),
     .ready(ready_to_exe),
     .rs_entry(to_exe_rs_entry),
@@ -67,9 +78,9 @@ module Rs(input wire clk_in,                       // system clock signal
                 reg2_v[i]     <= 32'b0;
                 has_dep1[i]   <= 1'b0;
                 has_dep2[i]   <= 1'b0;
-                rob_entry1[i] <= `ROB_BITS'b0;
-                rob_entry2[i] <= `ROB_BITS'b0;
-                rd_rob[i]     <= `ROB_BITS'b0;
+                rob_entry1[i] <= `ROB_BIT'b0;
+                rob_entry2[i] <= `ROB_BIT'b0;
+                rd_rob[i]     <= `ROB_BIT'b0;
                 inst[i]       <= 32'b0;
                 inst_addr[i]  <= 32'b0;
             end

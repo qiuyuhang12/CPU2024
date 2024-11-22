@@ -1,5 +1,6 @@
 `include "Const.v"
 
+//todo:lsb的提交不一定被cache接受
 module Lsb (input wire clk_in,                         // system clock signal
             input wire rst_in,                         // reset signal
             input wire rdy_in,                         // ready signal, pause cpu when low
@@ -10,6 +11,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             output reg [31:0] addr,
             output reg [31:0] data_in,                 //			st
             input wire cache_ready,                    //			ldst
+            input wire cache_welcome_signal,
             input wire is_load,                        //
             input wire [31:0] data_out,                //			ld
             input wire issue_signal,                   // from decoder
@@ -20,8 +22,8 @@ module Lsb (input wire clk_in,                         // system clock signal
             input wire [31:0]reg2_v_in,                //			register 2 value
             input wire has_dep1_in,                    //			has dependency 1
             input wire has_dep2_in,                    //			has dependency 2
-            input wire [`ROB_BITS-1]rob_entry1_in,     //			rob entry 1
-            input wire [`ROB_BITS-1]rob_entry2_in,     //			rob entry 2
+            input wire [`ROB_BIT-1:0]rob_entry1_in,      //			rob entry 1
+            input wire [`ROB_BIT-1:0]rob_entry2_in,      //			rob entry 2
             input wire [31:0]rob_entry_rd_in,          //			rob entry for destination register
             input wire [31:0]inst_in,                  //			instruction
             input wire [31:0]inst_addr_in,             //			instruction address
@@ -49,14 +51,14 @@ module Lsb (input wire clk_in,                         // system clock signal
     reg [31:0] reg2_v [0:`LSB_SIZE-1];
     reg has_dep1 [0:`LSB_SIZE-1];
     reg has_dep2 [0:`LSB_SIZE-1];
-    reg [`ROB_BITS-1] rob_entry1 [0:`LSB_SIZE-1];
-    reg [`ROB_BITS-1] rob_entry2 [0:`LSB_SIZE-1];
-    reg [`ROB_BITS-1] rob_entry_rd [0:`LSB_SIZE-1];
+    reg [`ROB_BIT-1:0] rob_entry1 [0:`LSB_SIZE-1];
+    reg [`ROB_BIT-1:0] rob_entry2 [0:`LSB_SIZE-1];
+    reg [`ROB_BIT-1:0] rob_entry_rd [0:`LSB_SIZE-1];
     reg [31:0] value[0:`LSB_SIZE-1];
     reg [31:0] inst[0:`LSB_SIZE-1];
     reg [31:0] inst_addr[0:`LSB_SIZE-1];
     
-    
+    integer i;
     always @(posedge clk_in) begin
         if (rst_in) begin
             for (i = 0; i < `LSB_SIZE; i = i + 1) begin
@@ -122,7 +124,7 @@ module Lsb (input wire clk_in,                         // system clock signal
                         end
                     end
                     
-                    if (data_out_ready) begin
+                    if (cache_welcome_signal) begin
                         if (rob_entry1[i] == mem_executing_rob) begin
                             reg1_v[i]   <= data_out;
                             has_dep1[i] <= 1'b0;
@@ -158,17 +160,20 @@ module Lsb (input wire clk_in,                         // system clock signal
             end
             
             if (busy[head]&&!has_dep1[head]&&!has_dep2[head]&&!mem_executing) begin
-                assert(!rob_empty);
-                if (first_rob_entry == rob_entry_rd[head]||op_type == `LD_TYPE) begin
-                    lsb_visit_mem     <= 1;
-                    op_type_out       <= op_type[head];
-                    op_out            <= op[head];
-                    addr              <= reg1_v[head]+imm[head];
-                    data_in           <= reg2_v[head];
-                    mem_executing     <= 1;
-                    mem_executing_rob <= rob_entry_rd[head];
-                    state[head]       <= EXECUTING;
+                if (rob_empty) begin
+                    $display("Error: ROB is empty");
+                    $stop;
                 end
+                    if (first_rob_entry == rob_entry_rd[head]||op_type[rob_entry_rd[head]] == `LD_TYPE) begin
+                        lsb_visit_mem     <= 1;
+                        op_type_out       <= op_type[head];
+                        op_out            <= op[head];
+                        addr              <= reg1_v[head]+imm[head];
+                        data_in           <= reg2_v[head];
+                        mem_executing     <= 1;
+                        mem_executing_rob <= rob_entry_rd[head];
+                        state[head]       <= EXECUTING;
+                    end
             end
         end
     end

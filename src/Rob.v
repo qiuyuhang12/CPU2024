@@ -57,7 +57,8 @@ module Rob(input wire clk_in,                           // system clock signal
     always @(posedge clk_in)
     begin
         if (rst_in||(clear_up&&rdy_in)) begin
-            for (int i = 0; i < `ROB_SIZE; i = i + 1) begin
+            integer i;
+            for (i = 0; i < `ROB_SIZE; i = i + 1) begin
                 busy[i]       <= 1'b0;
                 prepared[i]   <= 1'b0;
                 insts[i]      <= 32'h0;
@@ -74,13 +75,17 @@ module Rob(input wire clk_in,                           // system clock signal
         
         // RECIEVE BROADCAST
         if (rs_ready_bd) begin
-            assert (busy[rs_rob_entry]&&!prepared[rs_rob_entry]) else $fatal("Assertion failed: wild rs_rob_entry");
+            if (!(busy[rs_rob_entry] && !prepared[rs_rob_entry])) begin
+                $fatal("Assertion failed: wild rs_rob_entry");
+            end
             value[rs_rob_entry]    <= rs_value;
             prepared[rs_rob_entry] <= 1;
         end
         
         if (lsb_ready_bd) begin
-            assert (busy[lsb_rob_entry]&&!prepared[lsb_rob_entry]) else $fatal("Assertion failed: wild lsb_rob_entry");
+            if (!(busy[lsb_rob_entry] && !prepared[lsb_rob_entry])) begin
+                $fatal("Assertion failed: wild lsb_rob_entry");
+            end
             value[lsb_rob_entry]    <= lsb_value;
             prepared[lsb_rob_entry] <= 1;
         end
@@ -105,7 +110,7 @@ module Rob(input wire clk_in,                           // system clock signal
             insts[tail]      <= inst;
             insts_addr[tail] <= inst_addr;
             rd[tail]         <= rd_id;
-            prepared[tail]   < = op_type == `LUI||op_type == `AUIPC||op_type == `JAL||op_type == `JALR?1:0;
+            prepared[tail]   <= (op_type == `LUI||op_type == `AUIPC||op_type == `JAL||op_type == `JALR)?1:0;
             br_predict		 <= br_predict_in;
             if (inst == `END_TYPE) begin
                 //todo:end
@@ -121,16 +126,16 @@ module Rob(input wire clk_in,                           // system clock signal
     end
     
     //issue pollution
-    assign rob_issue_reg   = busy[tail]&&prepared[tail]&&op_type!   = `B_TYPE&&op_type!   = `S_TYPE;
+    assign rob_issue_reg   = busy[tail]&&prepared[tail]&&op_type!= `B_TYPE&&op_type!= `S_TYPE;
     assign issue_reg_id    = rd[tail];
     assign issue_rob_entry = tail;
     //COMMIT
-    assign rob_commit       = busy[head]&&prepared[head]&&op_type!       = `B_TYPE&&op_type!       = `S_TYPE;
+    assign rob_commit       = busy[head]&&prepared[head]&&op_type!= `B_TYPE&&op_type!= `S_TYPE;
     assign commit_rd_reg_id = rd[head];
     assign commit_rob_entry = head;
     assign commit_value     = value[head];
     //wrong_predict
-    assign clear_up = value[head][0]! = br_predict[head];
+    assign clear_up = value[head][0]!= br_predict[head];
     assign next_pc  = value[head][0]?inst_addr[head]+imm[head]:inst_addr[head]+4;
     
 endmodule

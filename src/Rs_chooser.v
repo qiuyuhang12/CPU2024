@@ -1,7 +1,7 @@
 `include "Const.v"
 
-module Rs_chooser (input wire prepared[0:`RS_SIZE-1],
-                   input wire busy[0:`RS_SIZE-1],
+module Rs_chooser (input wire [`RS_SIZE-1:0] prepared,
+                   input wire [`RS_SIZE-1:0] busy,
                    output wire full,
                    output wire ready,
                    output wire [`RS_BIT-1:0] rs_entry,

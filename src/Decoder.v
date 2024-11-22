@@ -23,10 +23,10 @@ module Decoder (input wire clk_in,                   // system clock signal
                 output wire [31:0]reg2_v,            //			register 2 value
                 output wire has_dep1,                //			has dependency 1
                 output wire has_dep2,                //			has dependency 2
-                output wire [`ROB_BITS-1]rob_entry1, //			rob entry 1
-                output wire [`ROB_BITS-1]rob_entry2, //			rob entry 2
+                output wire [`ROB_BIT-1]rob_entry1, //			rob entry 1
+                output wire [`ROB_BIT-1]rob_entry2, //			rob entry 2
                 output wire [31:0]rd_id,             //			destination register
-                output wire [`ROB_BIT:0]rd_rob,      //			rob entry for destination register
+                output wire [`ROB_BIT-1:0]rd_rob,      //			rob entry for destination register
                 output wire [31:0]inst_out,          //			instruction
                 output wire [31:0]inst_addr_out,     //			instruction address
                 input wire rob_full,                 // from rob
@@ -41,14 +41,14 @@ module Decoder (input wire clk_in,                   // system clock signal
                 input wire [31:0] val2,
                 input wire has_dep2_,                //			has dependency 2
                 input wire [`ROB_BIT - 1:0] dep2);
-    assign br_predict       = op_type == `BR_TYPE;
+    assign br_predict       = op_type == `B_TYPE;
     assign issue_signal     = start_decoder&&!wrong_predicted&&!jalr_stall&&valid && !rob_full && !rs_full && !lsb_full;
-    assign issue_signal_rs  = issue_signal&&(op_type == `ALGI_TYPE || op_type == `R_TYPE||op_type == `BR_TYPE);
+    assign issue_signal_rs  = issue_signal&&(op_type == `ALGI_TYPE || op_type == `R_TYPE||op_type == `B_TYPE);
     assign issue_signal_lsb = issue_signal&&(op_type == `LD_TYPE || op_type == `S_TYPE);
     wire no_rs2;
     assign no_rs2 = op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR || op_type == `LD_TYPE || op_type == `ALGI_TYPE;
     wire no_rd;
-    assign no_rd         = op_type == `BR_TYPE||op_type == `S_TYPE;
+    assign no_rd         = op_type == `B_TYPE||op_type == `S_TYPE;
     assign op_type       = inst[6:0];
     assign op            = inst[14:12];
     assign get_id1       = inst[19:15];
@@ -72,40 +72,40 @@ module Decoder (input wire clk_in,                   // system clock signal
     .imm(imm),
     .next_pc(pc_predictor_next_pc));
     assign next_pc = wrong_predicted ? correct_pc : pc_predictor_next_pc;
-    generate
-    case (op_type)
-        `LUI, `AUIPC: begin
-            assign imm = {inst[31:12], 12'b0};
-        end
-        `JAL: begin
-            assign imm = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-        end
-        `JALR: begin
-            assign imm = {{20{inst[31]}}, inst[31:20]};
-        end
-        `B_TYPE: begin
-            assign imm = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
-        end
-        `LD_TYPE: begin
-            assign imm = {{20{inst[31]}}, inst[31:20]};
-        end
-        `S_TYPE: begin
-            assign imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
-        end
-        `ALGI_TYPE: begin
-            if (op == 3'b001 || op == 3'b101) begin
-                assign imm = {{20{inst[31]}}, inst[31:20]};
+    always @(*) begin
+        case (op_type)
+            `LUI, `AUIPC: begin
+                imm = {inst[31:12], 12'b0};
             end
-            else begin
-                assign imm = {{26{inst[25]}}, inst[25:20]};
+            `JAL: begin
+                imm = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
             end
-        end
-        `R_TYPE: begin
-            assign imm = 32'h0;
-        end
-        default: begin
-            assign imm = 32'h0;
-        end
-    endcase
-    endgenerate
+            `JALR: begin
+                imm = {{20{inst[31]}}, inst[31:20]};
+            end
+            `B_TYPE: begin
+                imm = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
+            end
+            `LD_TYPE: begin
+                imm = {{20{inst[31]}}, inst[31:20]};
+            end
+            `S_TYPE: begin
+                imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
+            end
+            `ALGI_TYPE: begin
+                if (op == 3'b001 || op == 3'b101) begin
+                    imm = {{20{inst[31]}}, inst[31:20]};
+                end
+                else begin
+                    imm = {{26{inst[25]}}, inst[25:20]};
+                end
+            end
+            `R_TYPE: begin
+                imm = 32'h0;
+            end
+            default: begin
+                imm = 32'h0;
+            end
+        endcase
+    end
 endmodule

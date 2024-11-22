@@ -1,14 +1,45 @@
 // RISCV32 CPU top module
 // port modification allowed for debugging purposes
-`include "Const.v"
-`include "Cache/Cache.v"
-`include "Decoder.v"
-`include "Inst_fetch.v"
-`include "Lsb.v"
-`include "Reg.v"
-`include "Rob.v"
-`include "Rs.v"
+// `include "Const.v"
+// `include "Cache/Cache.v"
+// `include "Decoder.v"
+// `include "Inst_fetch.v"
+// `include "Lsb.v"
+// `include "Reg.v"
+// `include "Rob.v"
+// `include "Rs.v"
+`define ROB_BIT 5
+`define ROB_SIZE (1 << `ROB_BIT)
 
+`define REG_BIT 5
+`define REG_SIZE (1 << `REG_SIZE_BIT)
+
+`define LUI 7'b0110111
+`define AUIPC 7'b0010111
+`define JAL 7'b1101111
+`define JALR 7'b1100111
+`define B_TYPE 7'b1100011
+`define LD_TYPE 7'b0000011
+`define S_TYPE 7'b0100011
+`define ALGI_TYPE 7'b0010011
+`define R_TYPE 7'b0110011
+
+`define END_TYPE 32'h0ff00513
+
+`define CDB_BIT 3
+`define CDB_SIZE (1 << `CDB_BIT)
+
+`define RS_BIT 4 
+`define RS_SIZE (1 << `RS_BIT)
+
+`define ADDR_WIDTH = 17
+
+`define LSB_BIT 3
+`define LSB_SIZE (1 << `LSB_BIT)
+
+//todo:数据丢失？
+
+//todo:store 可以直接提交 不用等完成，但clear可能会有问题
 module cpu(input wire clk_in,               // system clock signal
            input wire rst_in,               // reset signal
            input wire	rdy_in,               // ready signal, pause cpu when low
@@ -95,8 +126,9 @@ module cpu(input wire clk_in,               // system clock signal
     wire rs_full;
     wire lsb_full;
     //between lsb & cache
+    wire cache_welcome_signal;
     wire lsb_visit_mem;
-    wire [31:0] lsb_load_value;
+    wire [31:0] lsb_load_value_to_cache;
     wire [31:0] lsb_store_value;
     wire [31:0] lsb_addr;
     wire [6:0] lsb_op_type;
@@ -114,6 +146,7 @@ module cpu(input wire clk_in,               // system clock signal
     .ram_in(mem_dout),          // output
     .ram_out(mem_din),         // input
     .lsb_ready(lsb_visit_mem),       // input
+    .cache_welcome_signal(cache_welcome_signal), // output
     .op_type(lsb_op_type),       // input
     .op(lsb_op),                 // input
     .addr(lsb_addr),             // input
@@ -150,8 +183,8 @@ module cpu(input wire clk_in,               // system clock signal
     .reg2_v(reg2_v),                   // output: [31:0] register 2 value
     .has_dep1(has_dep1),                 // output: has dependency 1
     .has_dep2(has_dep2),                 // output: has dependency 2
-    .rob_entry1(rob_entry1),               // output: [`ROB_BITS-1] rob entry 1
-    .rob_entry2(rob_entry2),               // output: [`ROB_BITS-1] rob entry 2
+    .rob_entry1(rob_entry1),               // output: [`ROB_BIT-1] rob entry 1
+    .rob_entry2(rob_entry2),               // output: [`ROB_BIT-1] rob entry 2
     .rd_id(rd_id),                    // output: [31:0] destination register
     .rd_rob(rd_rob),                   // output: [31:0] rob entry for destination register
     .inst_out(inst),                 // output: [31:0] instruction
@@ -197,6 +230,7 @@ module cpu(input wire clk_in,               // system clock signal
     .addr(lsb_addr),                           // output: [31:0]
     .data_in(lsb_store_value),                        // output: [31:0] st
     .cache_ready(cache_ready),                    // input: ldst
+    .cache_welcome_signal(cache_welcome_signal),           // input
     .is_load(is_load),                        // input
     .data_out(lsb_load_value),                       // input: [31:0] ld
     .issue_signal(issue_signal_lsb),                   // input: from decoder
@@ -207,8 +241,8 @@ module cpu(input wire clk_in,               // system clock signal
     .reg2_v_in(reg2_v),                      // input: [31:0] register 2 value
     .has_dep1_in(has_dep1),                    // input: has dependency 1
     .has_dep2_in(has_dep2),                    // input: has dependency 2
-    .rob_entry1_in(rob_entry1),                  // input: [`ROB_BITS-1] rob entry 1
-    .rob_entry2_in(rob_entry2),                  // input: [`ROB_BITS-1] rob entry 2
+    .rob_entry1_in(rob_entry1),                  // input: [`ROB_BIT-1] rob entry 1
+    .rob_entry2_in(rob_entry2),                  // input: [`ROB_BIT-1] rob entry 2
     .rob_entry_rd_in(rd_rob),                // input: [31:0] rob entry for destination register
     .inst_in(inst),                        // input: [31:0] instruction
     .inst_addr_in(inst_addr),                   // input: [31:0] instruction address
@@ -298,8 +332,8 @@ module cpu(input wire clk_in,               // system clock signal
     .reg2_v_in(reg2_v),                     // input: [31:0] register 2 value
     .has_dep1_in(has_dep1),                   // input: has dependency 1
     .has_dep2_in(has_dep2),                   // input: has dependency 2
-    .rob_entry1_in(rob_entry1),                 // input: [`ROB_BITS-1] rob entry 1
-    .rob_entry2_in(rob_entry2),                 // input: [`ROB_BITS-1] rob entry 2
+    .rob_entry1_in(rob_entry1),                 // input: [`ROB_BIT-1] rob entry 1
+    .rob_entry2_in(rob_entry2),                 // input: [`ROB_BIT-1] rob entry 2
     .rd_rob_in(rd_rob),                     // input: [31:0] rob entry for destination register
     .inst_in(inst),                       // input: [31:0] instruction
     .inst_addr_in(inst_addr),                  // input: [31:0] instruction address
