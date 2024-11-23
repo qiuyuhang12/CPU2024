@@ -24,7 +24,7 @@ module Decoder (input wire clk_in,                  // system clock signal
                 output wire has_dep2,               //			has dependency 2
                 output wire [`ROB_BIT-1:0]rob_entry1, //			rob entry 1
                 output wire [`ROB_BIT-1:0]rob_entry2, //			rob entry 2
-                output wire [31:0]rd_id,            //			destination register
+                output wire [4:0]rd_id,            //			destination register
                 output wire [`ROB_BIT-1:0]rd_rob,   //			rob entry for destination register
                 output wire [31:0]inst_out,         //			instruction
                 output wire [31:0]inst_addr_out,    //			instruction address
@@ -64,7 +64,7 @@ module Decoder (input wire clk_in,                  // system clock signal
     assign inst_addr_out = inst_addr;
     assign inst_out      = inst;
     assign jalr_stall    = inst[6:0] == `JALR && has_dep1_;
-    wire pc_predictor_next_pc;
+    wire [31:0]pc_predictor_next_pc;
     Pc_predictor Pc_predictor_inst(
     .now_pc(inst_addr),
     .now_inst(inst),

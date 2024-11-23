@@ -81,8 +81,8 @@ module cpu(input wire clk_in,               // system clock signal
     wire [31:0] reg1_v;
     wire [31:0] reg2_v;
     wire [31:0] imm;
-    wire rd_id;
-    wire [`ROB_BIT:0] rd_rob;
+    wire [4:0]rd_id;
+    wire [`ROB_BIT-1:0] rd_rob;
     //rob issue reg
     wire rob_issue_reg_signal;
     wire [4:0] issue_reg_id;
@@ -166,7 +166,7 @@ module cpu(input wire clk_in,               // system clock signal
     .has_dep2(has_dep2),                 // output: has dependency 2
     .rob_entry1(rob_entry1),               // output: [`ROB_BIT-1] rob entry 1
     .rob_entry2(rob_entry2),               // output: [`ROB_BIT-1] rob entry 2
-    .rd_id(rd_id),                    // output: [31:0] destination register
+    .rd_id(rd_id),                    // output: destination register
     .rd_rob(rd_rob),                   // output: [31:0] rob entry for destination register
     .inst_out(inst),                 // output: [31:0] instruction
     .inst_addr_out(inst_addr),            // output: [31:0] instruction address
@@ -277,7 +277,7 @@ module cpu(input wire clk_in,               // system clock signal
     .inst_addr(inst_addr),                        // input: [31:0]
     .inst(inst),                             // input: [31:0]
     .rd_id(rd_id),                            // input: [`REG_BIT - 1:0]
-    .imm(imm),                              // input: [31:0] 经过sext/直接issue/br的offset
+    .imm_in(imm),                              // input: [31:0] 经过sext/直接issue/br的offset
     .br_predict_in(br_predict),                    // input: 1 jump, 0 not jump
     .op_type(op_type),                          // input: [6:0] 大
     .op(op),                               // input: [2:0] 小

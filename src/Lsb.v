@@ -15,8 +15,8 @@ module Lsb (input wire clk_in,                         // system clock signal
             input wire is_load,                        //
             input wire [31:0] data_out,                //			ld
             input wire issue_signal,                   // from decoder
-            input wire op_type_in,                     //			operation type
-            input wire op_in,                          //			operation
+            input wire [6:0]op_type_in,                     //			operation type
+            input wire [2:0]op_in,                          //			operation
             input wire [31:0]imm_in,                   //			imm
             input wire [31:0]reg1_v_in,                //			register 1 value
             input wire [31:0]reg2_v_in,                //			register 2 value
@@ -24,7 +24,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             input wire has_dep2_in,                    //			has dependency 2
             input wire [`ROB_BIT-1:0]rob_entry1_in,      //			rob entry 1
             input wire [`ROB_BIT-1:0]rob_entry2_in,      //			rob entry 2
-            input wire [31:0]rob_entry_rd_in,          //			rob entry for destination register
+            input wire [`ROB_BIT-1:0]rob_entry_rd_in,          //			rob entry for destination register
             input wire [31:0]inst_in,                  //			instruction
             input wire [31:0]inst_addr_in,             //			instruction address
             input wire rob_empty,                      // from rob

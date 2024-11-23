@@ -5,23 +5,23 @@ module Rs(input wire clk_in,                       // system clock signal
           input wire rdy_in,                       // ready signal, pause cpu when low
           input wire rob_clear_up,
           input wire issue_signal,                 // from decoder
-          input wire op_type_in,                   //			operation type
-          input wire op_in,                        //			operation
+          input wire [6:0]op_type_in,                   //			operation type
+          input wire [2:0]op_in,                        //			operation
           input wire [31:0]reg1_v_in,              //			register 1 value
           input wire [31:0]reg2_v_in,              //			register 2 value
           input wire has_dep1_in,                  //			has dependency 1
           input wire has_dep2_in,                  //			has dependency 2
-          input wire [`ROB_BIT-1:0]rob_entry1_in,   //			rob entry 1
-          input wire [`ROB_BIT-1:0]rob_entry2_in,   //			rob entry 2
-          input wire [31:0]rd_rob_in,              //			rob entry for destination register
+          input wire [`ROB_BIT-1:0]rob_entry1_in,  //			rob entry 1
+          input wire [`ROB_BIT-1:0]rob_entry2_in,  //			rob entry 2
+          input wire [`ROB_BIT-1:0]rd_rob_in,              //			rob entry for destination register
           input wire [31:0]inst_in,                //			instruction
           input wire [31:0]inst_addr_in,           //			instruction address
           input wire lsb_ready,                    //from lsb
           input wire [`ROB_BIT-1:0] lsb_rob_entry,
           input wire [31:0] lsb_value,
           output wire rs_ready,                    //output
-          output reg [`ROB_BIT-1:0] rs_rob_entry,
-          output reg [31:0] rs_value,
+          output wire [`ROB_BIT-1:0] rs_rob_entry,
+          output wire [31:0] rs_value,
           output wire is_full);
     reg busy [0:`RS_SIZE-1];
     reg [6:0] op_type [0:`RS_SIZE-1];//[6:0]
@@ -38,9 +38,9 @@ module Rs(input wire clk_in,                       // system clock signal
     wire prepared[0:`RS_SIZE-1];
     
     generate
-    genvar i;
-    for (i = 0; i < `RS_SIZE; i = i + 1) begin: gen
-    assign prepared[i] = busy[i]&&!has_dep1[i]&&!has_dep2[i];
+    genvar ig;
+    for (ig = 0; ig < `RS_SIZE; ig = ig + 1) begin: gen
+    assign prepared[ig] = busy[ig]&&!has_dep1[ig]&&!has_dep2[ig];
     end
     endgenerate
     wire [`RS_BIT-1:0] to_exe_rs_entry;
@@ -49,14 +49,14 @@ module Rs(input wire clk_in,                       // system clock signal
     // 定义打包数组
     wire [`RS_SIZE-1:0] prepared_packed;
     wire [`RS_SIZE-1:0] busy_packed;
-
+    
     // 将未打包数组转换为打包数组
     generate
     genvar j;
-        for (j = 0; j < `RS_SIZE; j = j + 1) begin : pack_arrays
-            assign prepared_packed[j] = prepared[j];
-            assign busy_packed[j] = busy[j];
-        end
+    for (j = 0; j < `RS_SIZE; j = j + 1) begin : pack_arrays
+    assign prepared_packed[j] = prepared[j];
+    assign busy_packed[j]     = busy[j];
+    end
     endgenerate
     Rs_chooser Rs_chooser_inst(
     .prepared(prepared_packed),
@@ -66,6 +66,7 @@ module Rs(input wire clk_in,                       // system clock signal
     .rs_entry(to_exe_rs_entry),
     .issue_entry(to_issue_rs_entry));
     
+    integer i;
     always @(posedge clk_in) begin
         if (rst_in||rob_clear_up) begin
             for (i = 0; i < `RS_SIZE; i = i + 1) begin
@@ -102,7 +103,7 @@ module Rs(input wire clk_in,                       // system clock signal
                         end
                     end
                     
-                    if (alu_ready) begin
+                    if (rs_ready) begin
                         if (rob_entry1[i] == rs_rob_entry) begin
                             reg1_v[i]   <= rs_value;
                             has_dep1[i] <= 1'b0;

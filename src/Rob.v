@@ -77,7 +77,7 @@ module Rob(input wire clk_in,                           // system clock signal
             // RECEIVE BROADCAST
             if (rs_ready_bd) begin
                 if (!(busy[rs_rob_entry] && !prepared[rs_rob_entry])) begin
-                    $fatal("Assertion failed: wild rs_rob_entry");
+                    $fatal(1,"Assertion failed: wild rs_rob_entry");
                 end
                 value[rs_rob_entry]    <= rs_value;
                 prepared[rs_rob_entry] <= 1;
@@ -85,7 +85,7 @@ module Rob(input wire clk_in,                           // system clock signal
             
             if (lsb_ready_bd) begin
                 if (!(busy[lsb_rob_entry] && !prepared[lsb_rob_entry])) begin
-                    $fatal("Assertion failed: wild lsb_rob_entry");
+                    $fatal(1,"Assertion failed: wild lsb_rob_entry");
                 end
                 value[lsb_rob_entry]    <= lsb_value;
                 prepared[lsb_rob_entry] <= 1;
