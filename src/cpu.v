@@ -1,6 +1,6 @@
 // RISCV32 CPU top module
 // port modification allowed for debugging purposes
-// `include "Const.v"
+`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
 // `include "Cache/Cache.v"
 // `include "Decoder.v"
 // `include "Inst_fetch.v"
@@ -8,38 +8,7 @@
 // `include "Reg.v"
 // `include "Rob.v"
 // `include "Rs.v"
-`define ROB_BIT 5
-`define ROB_SIZE (1 << `ROB_BIT)
 
-`define REG_BIT 5
-`define REG_SIZE (1 << `REG_SIZE_BIT)
-
-`define LUI 7'b0110111
-`define AUIPC 7'b0010111
-`define JAL 7'b1101111
-`define JALR 7'b1100111
-`define B_TYPE 7'b1100011
-`define LD_TYPE 7'b0000011
-`define S_TYPE 7'b0100011
-`define ALGI_TYPE 7'b0010011
-`define R_TYPE 7'b0110011
-
-`define END_TYPE 32'h0ff00513
-
-`define CDB_BIT 3
-`define CDB_SIZE (1 << `CDB_BIT)
-
-`define RS_BIT 4 
-`define RS_SIZE (1 << `RS_BIT)
-
-`define ADDR_WIDTH = 17
-
-`define LSB_BIT 3
-`define LSB_SIZE (1 << `LSB_BIT)
-
-//todo:数据丢失？
-
-//todo:store 可以直接提交 不用等完成，但clear可能会有问题
 module cpu(input wire clk_in,               // system clock signal
            input wire rst_in,               // reset signal
            input wire	rdy_in,               // ready signal, pause cpu when low
@@ -49,6 +18,18 @@ module cpu(input wire clk_in,               // system clock signal
            output wire mem_wr,              // write/read signal (1 for write)
            input wire io_buffer_full,       // 1 if uart buffer is full
            output wire [31:0]	dbgreg_dout); // cpu register output (debugging demo)
+    // implementation goes here
+    
+    // Specifications:
+    // - Pause cpu(freeze pc, registers, etc.) when rdy_in is low
+    // - Memory read result will be returned in the next cycle. Write takes 1 cycle(no need to wait)
+    // - Memory is of size 128KB, with valid address ranging from 0x0 to 0x20000
+    // - I/O port is mapped to address higher than 0x30000 (mem_a[17:16] == 2'b11)
+    // - 0x30000 read: read a byte from input
+    // - 0x30000 write: write a byte to output (write 0x00 is ignored)
+    // - 0x30004 read: read clocks passed since cpu starts (in dword, 4 bytes)
+    // - 0x30004 write: indicates program stop (will output '\0' through uart tx)
+    
     //clear
     wire rob_clear_up;
     wire [31:0] clear_next_pc;
@@ -147,15 +128,15 @@ module cpu(input wire clk_in,               // system clock signal
     .ram_out(mem_din),         // input
     .lsb_ready(lsb_visit_mem),       // input
     .cache_welcome_signal(cache_welcome_signal), // output
-    .op_type(lsb_op_type),       // input
-    .op(lsb_op),                 // input
+    .op_type_in(lsb_op_type),       // input
+    .op_in(lsb_op),                 // input
+    .pc(pc),              // input
     .addr(lsb_addr),             // input
     .data_in(lsb_store_value),   // input
+    .should_fetch(should_fetch),    // input
     .to_lsb_ready(cache_ready),  // output
     .is_load(is_load),           // output
-    .data_out(lsb_load_value)    // output
-    .pc(pc),              // input
-    .should_fetch(should_fetch),    // input
+    .data_out(lsb_load_value),    // output
     .fetch_ready(fetch_ready),     // output
     .inst(fetch_inst0),            // output
     .inst_addr(fetch_inst_addr0)        // output
@@ -226,7 +207,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rob_clear_up(rob_clear_up),                   // input
     .lsb_visit_mem(lsb_visit_mem),                  // output: cache
     .op_type_out(lsb_op_type),                      // output: 1 for load, 0 for store; (read: 1, write: 0)
-    .op_out(lsb_op)                      // output: 0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
+    .op_out(lsb_op),                      // output: 0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
     .addr(lsb_addr),                           // output: [31:0]
     .data_in(lsb_store_value),                        // output: [31:0] st
     .cache_ready(cache_ready),                    // input: ldst
@@ -250,8 +231,8 @@ module cpu(input wire clk_in,               // system clock signal
     .first_rob_entry(rob_head),                // input: [`ROB_BIT-1:0]
     .rs_ready(rs_ready),                       // input: from rs
     .rs_rob_entry(rs_rob_entry),                   // input: [`ROB_BIT-1:0]
-    .rs_value(rs_ready),                       // input: [31:0]
-    .ls_ready(lsb_inst),                       // output: output load value
+    .rs_value(rs_value),                       // input: [31:0]
+    .ls_ready(lsb_ready),                       // output: output load value
     .ls_rob_entry(lsb_rob_entry),                   // output: [`ROB_BIT-1:0]
     .load_value(lsb_load_value)                      // output: [31:0]
     );
@@ -266,7 +247,7 @@ module cpu(input wire clk_in,               // system clock signal
     .commit_rob_entry(commit_reg_rob_entry),        // input: [`ROB_BIT-1:0] commit
     .rob_issue_reg(rob_issue_reg_signal),           // input
     .issue_reg_id(issue_reg_id),                    // input: [4:0] issue
-    .issue_rob_entry(issue_reg_rob_entry)           // input: [`ROB_BIT-1:0] issue
+    .issue_rob_entry(issue_reg_rob_entry),           // input: [`ROB_BIT-1:0] issue
     .get_id1(fetch_reg1_id),                        // input: [4:0] between reg and decoder
     .val1(fetch_reg1_v),               // output: [31:0]
     .has_dep1(fetch_has_dep1),                       // output
@@ -345,17 +326,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rs_value(rs_value),                      // output: [31:0]
     .is_full(rs_full)                 // output
     );
-    // implementation goes here
     
-    // Specifications:
-    // - Pause cpu(freeze pc, registers, etc.) when rdy_in is low
-    // - Memory read result will be returned in the next cycle. Write takes 1 cycle(no need to wait)
-    // - Memory is of size 128KB, with valid address ranging from 0x0 to 0x20000
-    // - I/O port is mapped to address higher than 0x30000 (mem_a[17:16] == 2'b11)
-    // - 0x30000 read: read a byte from input
-    // - 0x30000 write: write a byte to output (write 0x00 is ignored)
-    // - 0x30004 read: read clocks passed since cpu starts (in dword, 4 bytes)
-    // - 0x30004 write: indicates program stop (will output '\0' through uart tx)
     
     always @(posedge clk_in)
     begin

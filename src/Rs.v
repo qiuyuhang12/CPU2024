@@ -1,6 +1,4 @@
-`include "Const.v"
-`include "Rs_chooser.v"
-`include "Alu.v"
+`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
 
 module Rs(input wire clk_in,                       // system clock signal
           input wire rst_in,                       // reset signal

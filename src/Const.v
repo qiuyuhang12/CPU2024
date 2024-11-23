@@ -16,6 +16,7 @@
 
 `define END_TYPE 32'h0ff00513
 
+
 `define CDB_BIT 3
 `define CDB_SIZE (1 << `CDB_BIT)
 
@@ -30,3 +31,7 @@
 //todo:数据丢失？
 
 //todo:store 可以直接提交 不用等完成，但clear可能会有问题
+
+//todo:io_buffer_is_full
+
+//todo:cache优化

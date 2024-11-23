@@ -1,4 +1,4 @@
-`include "Const.v"
+`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
 
 module Pc_predictor (input wire [31:0] now_pc,
                      input wire [31:0] now_inst,

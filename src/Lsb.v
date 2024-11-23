@@ -1,4 +1,4 @@
-`include "Const.v"
+`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
 
 //todo:lsb的提交不一定被cache接受
 module Lsb (input wire clk_in,                         // system clock signal
