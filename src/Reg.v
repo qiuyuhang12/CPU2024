@@ -4,11 +4,11 @@ module Reg(input wire clk_in,                         // system clock signal
            input wire rst_in,                         // reset signal
            input wire rdy_in,                         // ready signal, pause cpu when low
            input wire rob_clear_up,
-           input wire rob_commit_reg,                 //commit
+           input wire rob_commit,                 //commit
            input wire [4:0] commit_reg_id,
            input wire [31:0] commit_reg_data,
            input wire [`ROB_BIT-1:0] commit_rob_entry,
-           input wire rob_issue_reg,                  //issue
+           input wire issue_pollute,                  //issue
            input wire [4:0] issue_reg_id,
            input wire [`ROB_BIT-1:0] issue_rob_entry,
            input wire [4:0] get_id1,                  //between reg and decoder
@@ -26,7 +26,8 @@ module Reg(input wire clk_in,                         // system clock signal
            input wire ready2,
            input wire [31:0] value2);
     reg [31:0] regs [0:31];
-    reg dirty [0:31];
+    // reg dirty [0:31];
+    reg [31:0] dirty;
     reg [`ROB_BIT-1:0] rob_entry [0:31];
     wire has_issue1;
     assign has_issue1     = dirty[get_id1]||(issue_reg_id!= 0&&get_id1 == issue_rob_entry);
@@ -59,7 +60,7 @@ module Reg(input wire clk_in,                         // system clock signal
             end
             end
         else begin
-            if (rob_commit_reg&&commit_reg_id != 0) begin
+            if (rob_commit&&commit_reg_id != 0) begin
                 if (!(commit_reg_id != 0 || commit_reg_data == 0)) begin
                     $fatal(1,"commit_reg_id = %d, commit_reg_data = %d", commit_reg_id, commit_reg_data);
                 end
@@ -73,7 +74,7 @@ module Reg(input wire clk_in,                         // system clock signal
                 end
             end
             
-            if (rob_issue_reg&&issue_reg_id != 0&&issue_rob_entry!=commit_rob_entry) begin
+            if (issue_pollute&&issue_reg_id != 0&&(!rob_commit||issue_rob_entry!=commit_rob_entry)) begin
                 dirty[issue_reg_id]     <= 1;
                 rob_entry[issue_reg_id] <= issue_rob_entry;
             end

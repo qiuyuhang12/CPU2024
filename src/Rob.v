@@ -9,7 +9,7 @@ module Rob(input wire clk_in,                           // system clock signal
            output wire [`ROB_BIT-1:0]rob_tail,
            output wire clear_up,                        // wrong_predicted
            output wire [31:0] next_pc,
-           input wire inst_valid,                       // from decoder
+           input wire issue_signal,                     // from decoder
            input wire [31:0] inst_addr,
            input wire [31:0] inst,
            input wire [`REG_BIT - 1:0] rd_id,
@@ -17,7 +17,7 @@ module Rob(input wire clk_in,                           // system clock signal
            input wire br_predict_in,                    //					1 jump, 0 not jump
            input wire [6:0]op_type,                     //					大
            input wire [2:0]op,                          //					小
-           output wire rob_issue_reg,                   // to reg			/issue 			to reg//defualt 0
+           output wire issue_pollute,                   // to reg			/issue 			to reg//defualt 0
            output wire [4:0] issue_reg_id,              // 			/issue 			to reg//defualt 0
            output wire [`ROB_BIT-1:0] issue_rob_entry,
            output wire rob_commit,                      //					/commit			to reg//defualt 0
@@ -47,27 +47,30 @@ module Rob(input wire clk_in,                           // system clock signal
     reg [31:0] value[0:`ROB_SIZE-1];//value->rd | br is true
     reg br_predict[0:`ROB_SIZE-1];
     reg [31:0] imm[0:`ROB_SIZE-1];
+    reg [6:0] op_type_save[0:`ROB_SIZE-1];
     integer i;
-    assign rob_head  = head;
-    assign rob_tail  = tail;
-    assign rob_empty = (head == tail) && !busy[head];
-    assign rob_full  = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1] && inst_valid);
-    assign ready1    = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1);
-    assign value1    = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:32'h0));
-    assign ready2    = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2);
-    assign value2    = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:32'h0));
+    assign rob_head    = head;
+    assign rob_tail    = tail;
+    assign rob_empty   = (head == tail) && !busy[head];
+    // assign rob_full = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1] && issue_signal);
+    assign rob_full    = (tail + 1 == head) || (tail + 2 == head && issue_signal);
+    assign ready1      = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1);
+    assign value1      = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:32'h0));
+    assign ready2      = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2);
+    assign value2      = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:32'h0));
     always @(posedge clk_in)
     begin
         if (rst_in || (clear_up && rdy_in)) begin
             for (i = 0; i < `ROB_SIZE; i = i + 1) begin
-                busy[i]       <= 1'b0;
-                prepared[i]   <= 1'b0;
-                insts[i]      <= 32'h0;
-                insts_addr[i] <= 32'h0;
-                rd[i]         <= 5'h0;
-                value[i]      <= 32'h0;
-                br_predict[i] <= 1'b0;
-                imm[i]        <= 32'h0;
+                busy[i]         <= 1'b0;
+                prepared[i]     <= 1'b0;
+                insts[i]        <= 32'h0;
+                insts_addr[i]   <= 32'h0;
+                rd[i]           <= 5'h0;
+                value[i]        <= 32'h0;
+                br_predict[i]   <= 1'b0;
+                imm[i]          <= 32'h0;
+                op_type_save[i] <= 7'h0;
             end
             head <= 0;
             tail <= 0;
@@ -79,7 +82,10 @@ module Rob(input wire clk_in,                           // system clock signal
                 if (!(busy[rs_rob_entry] && !prepared[rs_rob_entry])) begin
                     $fatal(1,"Assertion failed: wild rs_rob_entry");
                 end
-                value[rs_rob_entry]    <= rs_value;
+                
+                if (rd[rs_rob_entry]) begin
+                    value[rs_rob_entry] <= rs_value;
+                end
                 prepared[rs_rob_entry] <= 1;
             end
             
@@ -93,45 +99,44 @@ module Rob(input wire clk_in,                           // system clock signal
             
             //COMMIT
             if (busy[head] && prepared[head]) begin
-                head             <= head+1;
-                busy[head]       <= 1'b0;
-                prepared[head]   <= 1'b0;
-                insts[head]      <= 32'h0;
-                insts_addr[head] <= 32'h0;
-                rd[head]         <= 5'b0;
-                value[head]      <= 32'h0;
-                br_predict[head] <= 1'b0;
-                imm[head]        <= 32'h0;
+                head               <= head+1;
+                busy[head]         <= 1'b0;
+                prepared[head]     <= 1'b0;
+                insts[head]        <= 32'h0;
+                insts_addr[head]   <= 32'h0;
+                rd[head]           <= 5'b0;
+                value[head]        <= 32'h0;
+                br_predict[head]   <= 1'b0;
+                imm[head]          <= 32'h0;
+                op_type_save[head] <= 7'h0;
             end
             
             //ISSUE
-            if (inst_valid) begin
+            if (issue_signal) begin
                 //prepare、value、branch
                 tail             <= tail+1;
                 busy[tail]       <= 1'b1;
                 insts[tail]      <= inst;
                 insts_addr[tail] <= inst_addr;
-                rd[tail]         <= rd_id;
-                prepared[tail]   <= (op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR)?1'b1:1'b0;
-                br_predict[tail] <= br_predict_in;
-                imm[tail]        <= imm_in;
+                prepared[tail]     <= (op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR)?1'b1:1'b0;
+                br_predict[tail]   <= br_predict_in;
+                imm[tail]          <= imm_in;
+                op_type_save[tail] <= op_type;
+                rd[tail]           <= rd_id;
                 case (op_type)
                     `LUI:value[tail]       <= imm_in;
                     `AUIPC:value[tail]     <= imm_in+inst_addr;
                     `JAL,`JALR:value[tail] <= inst_addr+4;
                     default:value[tail]    <= 32'h0;
                 endcase
-                if (inst == `END_TYPE) begin
-                    //todo:end
-                end
             end
         end
     end
     
     //issue pollution
-    assign rob_issue_reg   = busy[tail-1] && prepared[tail-1] && op_type!= `B_TYPE && op_type!= `S_TYPE;
-    assign issue_reg_id    = rd[tail-1];
-    assign issue_rob_entry = tail-1;
+    assign issue_pollute   = issue_signal && op_type!= `B_TYPE && op_type!= `S_TYPE;
+    assign issue_reg_id    = rd_id;
+    assign issue_rob_entry = tail;
     //COMMIT
     assign rob_commit       = busy[head] && prepared[head] && op_type!= `B_TYPE && op_type!= `S_TYPE;
     assign commit_rd_reg_id = rd[head];

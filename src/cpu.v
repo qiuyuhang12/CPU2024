@@ -81,7 +81,7 @@ module cpu(input wire clk_in,               // system clock signal
     wire [4:0]rd_id;
     wire [`ROB_BIT-1:0] rd_rob;
     //rob issue reg
-    wire rob_issue_reg_signal;
+    wire issue_pollute_signal;
     wire [4:0] issue_reg_id;
     wire [`ROB_BIT-1:0] issue_reg_rob_entry;
     //rob commit reg
@@ -129,11 +129,11 @@ module cpu(input wire clk_in,               // system clock signal
     .op_in(lsb_op),                 // input
     .pc(pc),              // input
     .addr(lsb_addr),             // input
-    .data_in(lsb_store_value),   // input
+    .store_val_in(lsb_store_value),   // input
     .start_fetch(should_fetch),    // input
     .to_lsb_ready(cache_ready),  // output
     .is_load(is_load),           // output
-    .data_out(lsb_load_value),    // output
+    .load_val_out(lsb_load_value),    // output
     .fetch_ready(fetch_ready),     // output
     .inst(fetch_inst0),            // output
     .inst_addr(fetch_inst_addr0)        // output
@@ -206,12 +206,12 @@ module cpu(input wire clk_in,               // system clock signal
     .lsb_visit_mem(lsb_visit_mem),                  // output: cache
     .op_type_out(lsb_op_type),                      // output: 1 for load, 0 for store; (read: 1, write: 0)
     .op_out(lsb_op),                      // output: 0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
-    .addr(lsb_addr),                           // output: [31:0]
-    .data_in(lsb_store_value),                        // output: [31:0] st
+    .store_addr_out(lsb_addr),                           // output: [31:0]
+    .store_val_in(lsb_store_value),                        // output: [31:0] st
     .cache_ready(cache_ready),                    // input: ldst
     .cache_welcome_signal(cache_welcome_signal),           // input
     .is_load(is_load),                        // input
-    .data_out(lsb_load_value),                       // input: [31:0] ld
+    .load_val_out(lsb_load_value),                       // input: [31:0] ld
     .issue_signal(issue_signal_lsb),                   // input: from decoder
     .op_type_in(op_type),                     // input: operation type
     .op_in(op),                          // input: operation
@@ -239,11 +239,11 @@ module cpu(input wire clk_in,               // system clock signal
     .rst_in(rst_in),                         // input: reset signal
     .rdy_in(rdy_in),                         // input: ready signal, pause cpu when low
     .rob_clear_up(rob_clear_up),                   // input
-    .rob_commit_reg(rob_commit_reg_signal),         // input
+    .rob_commit(rob_commit_reg_signal),         // input
     .commit_reg_id(commit_reg_id),                  // input: [4:0] commit
     .commit_reg_data(commit_reg_data),              // input: [31:0] commit
     .commit_rob_entry(commit_reg_rob_entry),        // input: [`ROB_BIT-1:0] commit
-    .rob_issue_reg(rob_issue_reg_signal),           // input
+    .issue_pollute(issue_pollute_signal),           // input
     .issue_reg_id(issue_reg_id),                    // input: [4:0] issue
     .issue_rob_entry(issue_reg_rob_entry),           // input: [`ROB_BIT-1:0] issue
     .get_id1(fetch_reg1_id),                        // input: [4:0] between reg and decoder
@@ -271,7 +271,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rob_tail(rob_tail),                         // output
     .clear_up(rob_clear_up),                         // output: wrong_predicted
     .next_pc(clear_next_pc),                          // output: [31:0]
-    .inst_valid(issue_signal),                       // input: from decoder
+    .issue_signal(issue_signal),                       // input: from decoder
     .inst_addr(inst_addr),                        // input: [31:0]
     .inst(inst),                             // input: [31:0]
     .rd_id(rd_id),                            // input: [`REG_BIT - 1:0]
@@ -279,7 +279,7 @@ module cpu(input wire clk_in,               // system clock signal
     .br_predict_in(br_predict),                    // input: 1 jump, 0 not jump
     .op_type(op_type),                          // input: [6:0] 大
     .op(op),                               // input: [2:0] 小
-    .rob_issue_reg(rob_issue_reg_signal),                     // output: /issue to reg //default 0
+    .issue_pollute(issue_pollute_signal),                     // output: /issue to reg //default 0
     .issue_reg_id(issue_reg_id),                     // output: [4:0] to reg /issue to reg //default 0
     .issue_rob_entry(issue_reg_rob_entry),                  // output: [31:0]
     .rob_commit(rob_commit_reg_signal),                       // output: /commit to reg //default 0

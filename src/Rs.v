@@ -78,9 +78,9 @@ module Rs(input wire clk_in,                       // system clock signal
                 reg2_v[i]     <= 32'b0;
                 has_dep1[i]   <= 1'b0;
                 has_dep2[i]   <= 1'b0;
-                rob_entry1[i] <= `ROB_BIT'b0;
-                rob_entry2[i] <= `ROB_BIT'b0;
-                rd_rob[i]     <= `ROB_BIT'b0;
+                rob_entry1[i] <= 0;
+                rob_entry2[i] <= 0;
+                rd_rob[i]     <= 0;
                 inst[i]       <= 32'b0;
                 inst_addr[i]  <= 32'b0;
             end

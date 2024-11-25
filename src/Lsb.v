@@ -9,12 +9,12 @@ module Lsb (input wire clk_in,                         // system clock signal
             output reg lsb_visit_mem,                  // cache
             output reg [6:0] op_type_out,              // 			1 for load, 0 for store;(read: 1, write: 0)
             output reg [2:0] op_out,                   // 			0 for 1 byte, 1 for 2 bytes, 2 for 4 bytes
-            output reg [31:0] addr,
-            output reg [31:0] data_in,                 //			st
+            output reg [31:0] store_addr_out,
+            output reg [31:0] store_val_in,            //			st
             input wire cache_ready,                    //			ldst
             input wire cache_welcome_signal,
             input wire is_load,                        //
-            input wire [31:0] data_out,                //			ld
+            input wire [31:0] load_val_out,            //			ld
             input wire issue_signal,                   // from decoder
             input wire [6:0]op_type_in,                //			operation type
             input wire [2:0]op_in,                     //			operation
@@ -37,8 +37,8 @@ module Lsb (input wire clk_in,                         // system clock signal
             output wire [`ROB_BIT-1:0] ls_rob_entry,
             output wire [31:0] load_value);
     parameter LEISURE  = 2'b00, ISSUED  = 2'b01, EXECUTING  = 2'b11;
-    // assign rob_full = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1] && inst_valid);
-    assign lsb_full = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1]&&issue_signal);
+    // assign lsb_full = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1]&&issue_signal);
+    assign lsb_full    = (tail+1 == head) || (tail + 2 == head&&issue_signal);
     reg [`ROB_BIT-1:0] head;
     reg [`ROB_BIT-1:0] tail;
     reg mem_executing;
@@ -71,8 +71,8 @@ module Lsb (input wire clk_in,                         // system clock signal
             lsb_visit_mem     <= 0;
             op_type_out       <= 7'b0;
             op_out            <= 3'b0;
-            addr              <= 32'b0;
-            data_in           <= 32'b0;
+            store_addr_out    <= 32'b0;
+            store_val_in      <= 32'b0;
             for (i = 0; i < `LSB_SIZE; i = i + 1) begin
                 busy[i]         <= 1'b0;
                 state[i]        <= 2'b0;
@@ -132,14 +132,14 @@ module Lsb (input wire clk_in,                         // system clock signal
                         end
                     end
                     
-                    if (cache_welcome_signal) begin
+                    if (cache_ready) begin
                         if (rob_entry1[i] == mem_executing_rob) begin
-                            reg1_v[i]   <= data_out;
+                            reg1_v[i]   <= load_val_out;
                             has_dep1[i] <= 1'b0;
                         end
                         
                         if (rob_entry2[i] == mem_executing_rob) begin
-                            reg2_v[i]   <= data_out;
+                            reg2_v[i]   <= load_val_out;
                             has_dep2[i] <= 1'b0;
                         end
                     end
@@ -165,9 +165,10 @@ module Lsb (input wire clk_in,                         // system clock signal
             //execute
             if (mem_executing&&cache_ready) begin
                 mem_executing <= 0;
+                lsb_visit_mem <= 0;
             end
             
-            if (busy[head]&&!has_dep1[head]&&!has_dep2[head]&&!mem_executing) begin
+            if (busy[head]&&!has_dep1[head]&&!has_dep2[head]&&!mem_executing&&cache_welcome_signal) begin
                 if (rob_empty) begin
                     $fatal(1,"Error: ROB is empty");
                 end
@@ -175,17 +176,19 @@ module Lsb (input wire clk_in,                         // system clock signal
                         lsb_visit_mem     <= 1;
                         op_type_out       <= op_type[head];
                         op_out            <= op[head];
-                        addr              <= reg1_v[head]+imm[head];
-                        data_in           <= reg2_v[head];
+                        store_addr_out    <= reg1_v[head]+imm[head];
+                        store_val_in      <= reg2_v[head];
                         mem_executing     <= 1;
                         mem_executing_rob <= rob_entry_rd[head];
                         state[head]       <= EXECUTING;
+                        busy[head]        <= 0;
                     end
             end
         end
     end
     //broadcast
-    assign ls_ready     = cache_ready&&is_load;
+    assign ls_ready     = cache_ready;
     assign ls_rob_entry = mem_executing_rob;
-    assign load_value   = is_load?data_out:0;
+    assign load_value   = is_load?load_val_out:0;
+    
 endmodule
