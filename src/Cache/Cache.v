@@ -62,7 +62,7 @@ module Cache (input wire clk_in,                // system clock signal
                 endcase
             end
             else begin
-                get_mem_a = lsb_ready_?addr_[7:0]:pc_[7:0];
+                get_mem_a = lsb_ready_?addr_:pc_;
             end
         end
     endfunction
