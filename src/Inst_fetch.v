@@ -15,12 +15,12 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
                      output reg [31:0] inst_out,
                      input wire [31:0] pc_predictor_next_pc,
                      input wire issue_signal);
-    wire next_pc = rob_clear_up?rob_next_pc:pc_predictor_next_pc;
+    wire [31:0]next_pc = rob_clear_up?rob_next_pc:pc_predictor_next_pc;
     reg active_inst_unissued;
     always @(posedge clk_in) begin
         if (rst_in) begin
             pc                   <= 0;
-            start_fetch          <= 0;
+            start_fetch          <= 1;
             start_decode         <= 0;
             inst_addr_out        <= 0;
             inst_out             <= 0;
@@ -38,7 +38,7 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
             active_inst_unissued <= 0;
             end
             else if (fetch_ready) begin
-            if (!active_inst_unissued) begin
+            if (active_inst_unissued) begin
                 $fatal(1,"active_inst_unissued");
             end
             start_fetch          <= 0;
@@ -50,6 +50,9 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
             else if (issue_signal) begin
             pc                   <= next_pc;
             start_fetch          <= 1;
+            start_decode         <= 0;
+            inst_addr_out        <= 0;
+            inst_out             <= 0;
             active_inst_unissued <= 0;
             end
         else begin

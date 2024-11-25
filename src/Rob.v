@@ -129,9 +129,9 @@ module Rob(input wire clk_in,                           // system clock signal
     end
     
     //issue pollution
-    assign rob_issue_reg   = busy[tail] && prepared[tail] && op_type!= `B_TYPE && op_type!= `S_TYPE;
-    assign issue_reg_id    = rd[tail];
-    assign issue_rob_entry = tail;
+    assign rob_issue_reg   = busy[tail-1] && prepared[tail-1] && op_type!= `B_TYPE && op_type!= `S_TYPE;
+    assign issue_reg_id    = rd[tail-1];
+    assign issue_rob_entry = tail-1;
     //COMMIT
     assign rob_commit       = busy[head] && prepared[head] && op_type!= `B_TYPE && op_type!= `S_TYPE;
     assign commit_rd_reg_id = rd[head];

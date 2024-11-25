@@ -55,7 +55,7 @@ module Alu(input wire clk_in,                        // system clock signal
                     endcase
                 end
                 else begin
-                    $display("Alu: op_type not supported");
+                    $fatal(1,"Alu: op_type not supported");
                 end
             end
         end

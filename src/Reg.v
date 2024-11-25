@@ -61,10 +61,10 @@ module Reg(input wire clk_in,                         // system clock signal
         else begin
             if (rob_commit_reg&&commit_reg_id != 0) begin
                 if (!(commit_reg_id != 0 || commit_reg_data == 0)) begin
-                    $display("commit_reg_id = %d, commit_reg_data = %d", commit_reg_id, commit_reg_data);
+                    $fatal(1,"commit_reg_id = %d, commit_reg_data = %d", commit_reg_id, commit_reg_data);
                 end
                 regs[commit_reg_id] <= commit_reg_data;
-                if (dirty[commit_reg_id] != 1) begin
+                if (dirty[commit_reg_id] != 1&&issue_rob_entry!=commit_rob_entry) begin
                     $fatal(1,"Assertion failed: dirty[commit_reg_id] should be 1");
                 end
                 if (rob_entry[commit_reg_id] == commit_rob_entry) begin
@@ -73,7 +73,7 @@ module Reg(input wire clk_in,                         // system clock signal
                 end
             end
             
-            if (rob_issue_reg&&issue_reg_id != 0) begin
+            if (rob_issue_reg&&issue_reg_id != 0&&issue_rob_entry!=commit_rob_entry) begin
                 dirty[issue_reg_id]     <= 1;
                 rob_entry[issue_reg_id] <= issue_rob_entry;
             end

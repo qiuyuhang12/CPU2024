@@ -69,6 +69,7 @@ module Rs(input wire clk_in,                       // system clock signal
     integer i;
     always @(posedge clk_in) begin
         if (rst_in||rob_clear_up) begin
+            
             for (i = 0; i < `RS_SIZE; i = i + 1) begin
                 busy[i]       <= 1'b0;
                 op_type[i]    <= 7'b0;

@@ -33,9 +33,6 @@ module cpu(input wire clk_in,               // system clock signal
     //clear
     wire rob_clear_up;
     wire [31:0] clear_next_pc;
-    //io
-    wire ram_rw;
-    assign mem_wr = ~ram_rw;
     //broadcast
     wire lsb_ready;
     wire [31:0] lsb_load_value;
@@ -122,10 +119,10 @@ module cpu(input wire clk_in,               // system clock signal
     .rst_in(rst_in),          // input
     .rdy_in(rdy_in),          // input
     .rob_clear_up(rob_clear_up),    // input
-    .ram_rw(ram_rw),          // output
-    .ram_addr(mem_a),        // output
-    .ram_in(mem_dout),          // output
-    .ram_out(mem_din),         // input
+    .mem_wr(mem_wr),          // output
+    .mem_a(mem_a),        // output
+    .mem_dout(mem_dout),          // output
+    .mem_din(mem_din),         // input
     .lsb_ready(lsb_visit_mem),       // input
     .cache_welcome_signal(cache_welcome_signal), // output
     .op_type_in(lsb_op_type),       // input
@@ -133,7 +130,7 @@ module cpu(input wire clk_in,               // system clock signal
     .pc(pc),              // input
     .addr(lsb_addr),             // input
     .data_in(lsb_store_value),   // input
-    .should_fetch(should_fetch),    // input
+    .start_fetch(should_fetch),    // input
     .to_lsb_ready(cache_ready),  // output
     .is_load(is_load),           // output
     .data_out(lsb_load_value),    // output
@@ -149,7 +146,7 @@ module cpu(input wire clk_in,               // system clock signal
     .correct_pc(clear_next_pc),               // input: [31:0]
     .next_pc(next_pc),                  // output: [31:0] to inst fetcher
     .jalr_stall(jalr_stall),               // output
-    .valid(fetch_ready),                    // input: from inst fetcher
+    .valid(start_decode),                    // input: from inst fetcher
     .inst_addr(fetch_inst_addr),                // input: [31:0]
     .inst(fetch_inst),                     // input: [31:0]
     .start_decoder(start_decode),              // input: start decoder
@@ -204,6 +201,7 @@ module cpu(input wire clk_in,               // system clock signal
     .clk_in(clk_in),                         // input: system clock signal
     .rst_in(rst_in),                         // input: reset signal
     .rdy_in(rdy_in),                         // input: ready signal, pause cpu when low
+    .lsb_full(lsb_full),                        // output: from lsb
     .rob_clear_up(rob_clear_up),                   // input
     .lsb_visit_mem(lsb_visit_mem),                  // output: cache
     .op_type_out(lsb_op_type),                      // output: 1 for load, 0 for store; (read: 1, write: 0)
