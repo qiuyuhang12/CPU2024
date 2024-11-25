@@ -7,10 +7,9 @@ module Decoder (input wire clk_in,                  // system clock signal
                 input wire [31:0] correct_pc,
                 output wire [31:0] next_pc,         // to inst fetcher
                 output wire jalr_stall,
-                input wire valid,                   // from inst fetcher
                 input wire [31:0] inst_addr,
                 input wire [31:0] inst,
-                input wire start_decoder,           // start decoder
+                input wire start_decode,           // start decoder
                 output wire br_predict,             // to rob
                 output wire issue_signal,           // to rob inst_fetcher
                 output wire issue_signal_rs,        // to rs
@@ -42,7 +41,7 @@ module Decoder (input wire clk_in,                  // system clock signal
                 input wire [`ROB_BIT - 1:0] dep2);
 
     assign br_predict       = op_type == `B_TYPE;
-    assign issue_signal     = start_decoder&&!wrong_predicted&&!jalr_stall&&valid && !rob_full && !rs_full && !lsb_full;
+    assign issue_signal     = start_decode&&!wrong_predicted&&!jalr_stall&& !rob_full && !rs_full && !lsb_full;
     assign issue_signal_rs  = issue_signal&&(op_type == `ALGI_TYPE || op_type == `R_TYPE||op_type == `B_TYPE);
     assign issue_signal_lsb = issue_signal&&(op_type == `LD_TYPE || op_type == `S_TYPE);
     wire no_rs2;

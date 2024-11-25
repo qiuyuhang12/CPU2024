@@ -146,10 +146,9 @@ module cpu(input wire clk_in,               // system clock signal
     .correct_pc(clear_next_pc),               // input: [31:0]
     .next_pc(next_pc),                  // output: [31:0] to inst fetcher
     .jalr_stall(jalr_stall),               // output
-    .valid(start_decode),                    // input: from inst fetcher
     .inst_addr(fetch_inst_addr),                // input: [31:0]
     .inst(fetch_inst),                     // input: [31:0]
-    .start_decoder(start_decode),              // input: start decoder
+    .start_decode(start_decode),              // input: start decoder
     .br_predict(br_predict),                    // output: to rob
     .issue_signal(issue_signal),             // output: to rob inst_fetcher
     .issue_signal_rs(issue_signal_rs),          // output: to rs
