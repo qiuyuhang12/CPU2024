@@ -53,7 +53,11 @@ module Rob(input wire clk_in,                           // system clock signal
     assign rob_tail    = tail;
     assign rob_empty   = (head == tail) && !busy[head];
     // assign rob_full = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1] && issue_signal);
-    assign rob_full    = (tail + 1 == head) || (tail + 2 == head && issue_signal);
+    // assign rob_full    = (((tail + 1)&((1<<`ROB_BIT)-1)) == head) || (((tail + 2)&((1<<`ROB_BIT)-1) == head) && issue_signal);
+    // assign rob_full    = (tail + 1)%`ROB_SIZE == head || (((2+tail)%`ROB_SIZE == head) && issue_signal);
+    parameter [`ROB_BIT-1:0]tmp = (`ROB_BIT'b1<<`ROB_BIT)-1;
+    assign rob_full    = ((tail + 1-head)&tmp) == 0;
+    // assign rob_full    = 1;
     assign ready1      = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1);
     assign value1      = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:32'h0));
     assign ready2      = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2);
@@ -93,7 +97,10 @@ module Rob(input wire clk_in,                           // system clock signal
                 if (!(busy[lsb_rob_entry] && !prepared[lsb_rob_entry])) begin
                     $fatal(1,"Assertion failed: wild lsb_rob_entry");
                 end
-                value[lsb_rob_entry]    <= lsb_value;
+                
+                if (rd[rs_rob_entry]) begin
+                    value[lsb_rob_entry] <= lsb_value;
+                end
                 prepared[lsb_rob_entry] <= 1;
             end
             

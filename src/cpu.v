@@ -230,7 +230,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rs_ready(rs_ready),                       // input: from rs
     .rs_rob_entry(rs_rob_entry),                   // input: [`ROB_BIT-1:0]
     .rs_value(rs_value),                       // input: [31:0]
-    .ls_ready(lsb_ready),                       // output: output load value
+    .lsb_ready(lsb_ready),                       // output: output load value
     .ls_rob_entry(lsb_rob_entry),                   // output: [`ROB_BIT-1:0]
     .load_value(lsb_load_value)                      // output: [31:0]
     );
