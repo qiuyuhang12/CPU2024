@@ -66,6 +66,10 @@ module Rob(input wire clk_in,                           // system clock signal
     assign value2 = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:issue_val));
     wire debug_prepared = prepared[head];
     wire debug_busy = busy[head];
+    wire debug_insts = insts[head];
+    wire debug_insts_addr = insts_addr[head];
+    wire debug_rd = rd[head];
+    wire debug_value = value[head];
     always @(posedge clk_in)
     begin
         if (rst_in || (clear_up && rdy_in)) begin
@@ -91,7 +95,7 @@ module Rob(input wire clk_in,                           // system clock signal
                     $fatal(1,"Assertion failed: wild rs_rob_entry");
                 end
                 
-                if (rd[rs_rob_entry]) begin
+                if (rd[rs_rob_entry]||op_type_save[rs_rob_entry]==`B_TYPE) begin
                     value[rs_rob_entry] <= rs_value;
                 end
                 prepared[rs_rob_entry] <= 1;
@@ -170,6 +174,6 @@ module Rob(input wire clk_in,                           // system clock signal
     assign commit_value     = value[head];
     //wrong_predict
     assign clear_up = busy[head]&&op_type_save[head]==`B_TYPE&&prepared[head]&&value[head][0]!= br_predict[head];
-    assign next_pc  = clear_up?value[head][0]?insts_addr[head]+imm[head]:insts_addr[head]+32'h4:0;
+    assign next_pc  = clear_up?  value[head][0]?insts_addr[head]+imm[head]:insts_addr[head]+32'h4  :0;
     
 endmodule

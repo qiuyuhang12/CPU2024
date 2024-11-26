@@ -147,7 +147,7 @@ module Cache (input wire clk_in,                // system clock signal
     
     
     // assign mem_dout = bytes_remain?store_val[bytes_remain<<3-1:bytes_remain<<3-8]:0;
-    function [31:0] get_store_val;
+    function [7:0] get_store_val;
         input [2:0] bytes_remain_;
         input [31:0] store_val_;
         input [7:0] bytes_tot_;
