@@ -152,6 +152,7 @@ module Rs(input wire clk_in,                       // system clock signal
     .op_type(op_type[to_exe_rs_entry]),
     .op_addition(inst[to_exe_rs_entry][30]),
     .rob_entry(rd_rob[to_exe_rs_entry]),
+    .rob_clear_up(rob_clear_up),
     .ready(rs_ready),
     .res(rs_value),
     .rob_entry_out(rs_rob_entry)

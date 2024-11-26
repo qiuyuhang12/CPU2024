@@ -64,6 +64,8 @@ module Rob(input wire clk_in,                           // system clock signal
     assign value1 = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:issue_val));
     assign ready2 = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2)||(issue_signal && tail == get_rob_entry2&&issue_val_ready);
     assign value2 = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:issue_val));
+    wire debug_prepared = prepared[head];
+    wire debug_busy = busy[head];
     always @(posedge clk_in)
     begin
         if (rst_in || (clear_up && rdy_in)) begin
@@ -167,7 +169,7 @@ module Rob(input wire clk_in,                           // system clock signal
     assign commit_rob_entry = head;
     assign commit_value     = value[head];
     //wrong_predict
-    assign clear_up = op_type_save[head]==`B_TYPE&&value[head][0]!= br_predict[head];
+    assign clear_up = busy[head]&&op_type_save[head]==`B_TYPE&&prepared[head]&&value[head][0]!= br_predict[head];
     assign next_pc  = clear_up?value[head][0]?insts_addr[head]+imm[head]:insts_addr[head]+32'h4:0;
     
 endmodule

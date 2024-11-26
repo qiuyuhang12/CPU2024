@@ -10,6 +10,7 @@ module Alu(input wire clk_in,                        // system clock signal
            input wire [6:0] op_type,
            input wire op_addition,
            input wire [`ROB_BIT-1:0]rob_entry,
+           input wire rob_clear_up,
            output reg ready,
            output reg [31:0] res,
            output reg [`ROB_BIT-1:0] rob_entry_out);
@@ -17,7 +18,7 @@ module Alu(input wire clk_in,                        // system clock signal
     
     localparam Beq = 3'b000, Bne = 3'b001, Blt = 3'b100, Bge = 3'b101, Bltu = 3'b110, Bgeu = 3'b111;
     always @(posedge clk_in)begin
-        if (rst_in)begin
+        if (rst_in||rob_clear_up)begin
             ready         <= 1'b0;
             rob_entry_out <= 0;
             res           <= 0;
