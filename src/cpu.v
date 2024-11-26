@@ -239,6 +239,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rdy_in(rdy_in),                         // input: ready signal, pause cpu when low
     .rob_clear_up(rob_clear_up),                   // input
     .rob_commit(rob_commit_reg_signal),         // input
+    .debug_rob_empty(rob_empty),                  // input
     .commit_reg_id(commit_reg_id),                  // input: [4:0] commit
     .commit_reg_data(commit_reg_data),              // input: [31:0] commit
     .commit_rob_entry(commit_reg_rob_entry),        // input: [`ROB_BIT-1:0] commit
@@ -321,7 +322,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rs_ready(rs_ready),                      // output
     .rs_rob_entry(rs_rob_entry),                  // output: [`ROB_BIT-1:0]
     .rs_value(rs_value),                      // output: [31:0]
-    .is_full(rs_full)                 // output
+    .rs_full(rs_full)                 // output
     );
     
     

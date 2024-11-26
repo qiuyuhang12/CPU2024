@@ -22,7 +22,7 @@ module Rs(input wire clk_in,                       // system clock signal
           output wire rs_ready,                    //output
           output wire [`ROB_BIT-1:0] rs_rob_entry,
           output wire [31:0] rs_value,
-          output wire is_full);
+          output wire rs_full);
     reg busy [0:`RS_SIZE-1];
     reg [6:0] op_type [0:`RS_SIZE-1];//[6:0]
     reg [2:0] op [0:`RS_SIZE-1];//[14:12]
@@ -61,7 +61,7 @@ module Rs(input wire clk_in,                       // system clock signal
     Rs_chooser Rs_chooser_inst(
     .prepared(prepared_packed),
     .busy(busy_packed),
-    .full(is_full),
+    .full(rs_full),
     .ready(ready_to_exe),
     .rs_entry(to_exe_rs_entry),
     .issue_entry(to_issue_rs_entry));

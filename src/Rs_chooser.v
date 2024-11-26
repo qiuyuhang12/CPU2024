@@ -20,6 +20,7 @@ for (j = 1; j < `RS_SIZE; j = j + 1) begin
     assign leisure_tree[j]  = leisure_tree[j<<1]?leisure_tree[j<<1]:leisure_tree[j<<1|1];
 end
 endgenerate
+wire debug_p1 = prepared_tree[1];
 assign ready       = prepared_tree[1]?1:0;
 assign rs_entry    = prepared_tree[1]-1;
 assign full        = leisure_tree[1]?0:1;

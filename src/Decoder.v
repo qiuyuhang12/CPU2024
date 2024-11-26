@@ -97,7 +97,7 @@ module Decoder (input wire clk_in,                  // system clock signal
                     get_imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
                 end
                 `ALGI_TYPE: begin
-                    if (op == 3'b001 || op == 3'b101) begin
+                    if (op != 3'b001 && op != 3'b101) begin
                         get_imm = {{20{inst[31]}}, inst[31:20]};
                     end
                     else begin
