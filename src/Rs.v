@@ -23,6 +23,8 @@ module Rs(input wire clk_in,                       // system clock signal
           output wire [`ROB_BIT-1:0] rs_rob_entry,
           output wire [31:0] rs_value,
           output wire rs_full);
+    wire [`ROB_BIT-1:0]debug_rob_entry_0 = rd_rob[0];
+    wire [`ROB_BIT-1:0]debug_rob_entry_1 = rd_rob[1];
     reg busy [0:`RS_SIZE-1];
     reg [6:0] op_type [0:`RS_SIZE-1];//[6:0]
     reg [2:0] op [0:`RS_SIZE-1];//[14:12]

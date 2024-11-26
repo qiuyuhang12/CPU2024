@@ -155,11 +155,11 @@ module Cache (input wire clk_in,                // system clock signal
             if (bytes_tot_ == 0) begin
                 get_store_val = store_val_[7:0];
             end
-            else if (bytes_remain == 0) begin
+            else if (bytes_remain_ == 0) begin
                 get_store_val = 32'b0;
             end
             else
-                case (bytes_tot_-bytes_remain)
+                case (bytes_tot_-bytes_remain_)
                     3'b010: get_store_val = store_val_[31:24];
                     3'b001: get_store_val = store_val_[23:16];
                     3'b000: get_store_val = store_val_[15:8];
@@ -171,16 +171,17 @@ module Cache (input wire clk_in,                // system clock signal
     function [31:0] get_load_val_out;
         input [2:0] op;
         input [31:0] load_val;
+        input [7:0] mem_din_;
         begin
             case (op)
-                3'b000: get_load_val_out  = {{24{load_val[7]}}, mem_din[7:0]};
-                3'b001: get_load_val_out  = {{16{load_val[15]}}, mem_din[7:0], load_val[7:0]};
-                3'b010: get_load_val_out  = {mem_din[7:0], load_val[23:0]};
-                3'b100: get_load_val_out  = {24'b0, mem_din[7:0]};
-                3'b101: get_load_val_out  = {16'b0, mem_din[7:0], load_val[7:0]};
+                3'b000: get_load_val_out  = {{24{mem_din_[7]}}, mem_din_};
+                3'b001: get_load_val_out  = {{16{mem_din_[7]}}, mem_din_, load_val[7:0]};
+                3'b010: get_load_val_out  = {mem_din_, load_val[23:0]};
+                3'b100: get_load_val_out  = {24'b0, mem_din_};
+                3'b101: get_load_val_out  = {16'b0, mem_din_, load_val[7:0]};
                 default: get_load_val_out = 32'b0;
             endcase
         end
     endfunction
-    assign load_val_out = to_lsb_ready?get_load_val_out(op, load_val):32'b0;
+    assign load_val_out = to_lsb_ready?get_load_val_out(op, load_val,mem_din):32'b0;
 endmodule
