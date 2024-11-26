@@ -106,7 +106,7 @@ module cpu(input wire clk_in,               // system clock signal
     //between lsb & cache
     wire cache_welcome_signal;
     wire lsb_visit_mem;
-    wire [31:0] lsb_load_value_to_cache;
+    wire [31:0] lsb_load_value_from_cache;
     wire [31:0] lsb_store_value;
     wire [31:0] lsb_addr;
     wire [6:0] lsb_op_type;
@@ -133,7 +133,7 @@ module cpu(input wire clk_in,               // system clock signal
     .start_fetch(should_fetch),    // input
     .to_lsb_ready(cache_ready),  // output
     .is_load(is_load),           // output
-    .load_val_out(lsb_load_value),    // output
+    .load_val_out(lsb_load_value_from_cache),    // output
     .fetch_ready(fetch_ready),     // output
     .inst(fetch_inst0),            // output
     .inst_addr(fetch_inst_addr0)        // output
@@ -210,7 +210,7 @@ module cpu(input wire clk_in,               // system clock signal
     .cache_ready(cache_ready),                    // input: ldst
     .cache_welcome_signal(cache_welcome_signal),           // input
     .is_load(is_load),                        // input
-    .load_val_out(lsb_load_value),                       // input: [31:0] ld
+    .load_val_out(lsb_load_value_from_cache),                       // input: [31:0] ld
     .issue_signal(issue_signal_lsb),                   // input: from decoder
     .op_type_in(op_type),                     // input: operation type
     .op_in(op),                          // input: operation
@@ -338,7 +338,9 @@ module cpu(input wire clk_in,               // system clock signal
         end
         else
         begin
-            
+            if (mem_a>32'h20000&&mem_a!=32'h30000&&mem_a!=32'h30004) begin
+                $fatal(1,"Invalid memory address %d", mem_a);
+            end
         end
     end
     

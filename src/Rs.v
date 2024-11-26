@@ -141,6 +141,7 @@ module Rs(input wire clk_in,                       // system clock signal
         end
     end
     //execute
+    wire has_op_addition=op_type[to_exe_rs_entry]==`ALGI_TYPE&&op[to_exe_rs_entry]==3'b101||op_type[to_exe_rs_entry]==`R_TYPE&&(op[to_exe_rs_entry]==3'b101||op[to_exe_rs_entry]==3'b000);
     Alu alu(
     .clk_in(clk_in),
     .rst_in(rst_in),
@@ -150,7 +151,7 @@ module Rs(input wire clk_in,                       // system clock signal
     .vj(reg2_v[to_exe_rs_entry]),
     .op(op[to_exe_rs_entry]),
     .op_type(op_type[to_exe_rs_entry]),
-    .op_addition(inst[to_exe_rs_entry][30]),
+    .op_addition(has_op_addition&&inst[to_exe_rs_entry][30]),
     .rob_entry(rd_rob[to_exe_rs_entry]),
     .rob_clear_up(rob_clear_up),
     .ready(rs_ready),

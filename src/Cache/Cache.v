@@ -16,16 +16,16 @@ module Cache (input wire clk_in,                // system clock signal
               input wire [6:0] op_type_in,
               input wire [2:0] op_in,
               input wire [31:0] addr,
-              input wire [31:0] store_val_in,        //				st
+              input wire [31:0] store_val_in,   //				st
               output wire to_lsb_ready,         //				ld st
               output wire is_load,
-              output wire [31:0] load_val_out,      //				ld
+              output wire [31:0] load_val_out,  //				ld
               input wire [31:0] pc,             // between inst fetcher
               input wire start_fetch,
               output wire fetch_ready,
               output wire [31:0] inst,
               output wire [31:0] inst_addr);
-    parameter none = 2'b00,decoder = 2'b01, lsb = 2'b10;
+    parameter none              = 2'b00,decoder              = 2'b01, lsb              = 2'b10;
     assign cache_welcome_signal = !busy&&!start_fetch||fetch_ready||to_lsb_ready;
     reg busy;
     reg [1:0]employer;//0 for none,1 for decoder, 2 for lsb
@@ -99,8 +99,8 @@ module Cache (input wire clk_in,                // system clock signal
                 addr_reg     <= addr;
                 load_val     <= 0;
                 store_val    <= store_val_in;
-                bytes_remain <= (3'b1<<$unsigned(op_in))-1;
-                bytes_tot    <= (3'b1<<$unsigned(op_in))-1;
+                bytes_remain <= (3'b1<<$unsigned(op_in[1:0]))-1;
+                bytes_tot    <= (3'b1<<$unsigned(op_in[1:0]))-1;
             end
             
             else if (start_fetch) begin
@@ -138,7 +138,7 @@ module Cache (input wire clk_in,                // system clock signal
                         bytes_remain  <= bytes_remain-1;
                     end
                     default: begin
-                        $fatal(1,"bytes_tot-bytes_remain");
+                        $fatal(1,"bytes_tot-bytes_remain %d not supported",bytes_tot-bytes_remain);
                     end
                 endcase
             
@@ -166,22 +166,72 @@ module Cache (input wire clk_in,                // system clock signal
                 endcase
         end
     endfunction
-    assign mem_dout    = get_store_val(bytes_remain, store_val, bytes_tot);
+    assign mem_dout        = get_store_val(bytes_remain, store_val, bytes_tot);
     // assign load_val_out = load_val;
-    function [31:0] get_load_val_out;
-        input [2:0] op;
-        input [31:0] load_val;
-        input [7:0] mem_din_;
-        begin
-            case (op)
-                3'b000: get_load_val_out  = {{24{mem_din_[7]}}, mem_din_};
-                3'b001: get_load_val_out  = {{16{mem_din_[7]}}, mem_din_, load_val[7:0]};
-                3'b010: get_load_val_out  = {mem_din_, load_val[23:0]};
-                3'b100: get_load_val_out  = {24'b0, mem_din_};
-                3'b101: get_load_val_out  = {16'b0, mem_din_, load_val[7:0]};
-                default: get_load_val_out = 32'b0;
-            endcase
-        end
-    endfunction
-    assign load_val_out = to_lsb_ready?get_load_val_out(op, load_val,mem_din):32'b0;
+    // function [31:0] get_load_val_out;
+    //     input [2:0] op_;
+    //     input [31:0] load_val_;
+    //     input [7:0] mem_din_;
+    //     integer iii;
+    //     case (op_)
+    //         3'b000: begin
+    //             get_load_val_out = {{24{mem_din_[7]}}, mem_din_};
+    //         end
+    //         3'b001: begin
+    //             get_load_val_out = {{16{mem_din_[7]}}, mem_din_, load_val_[7:0]};
+    //         end
+    //         3'b010: begin
+    //             get_load_val_out = {mem_din_, load_val_[23:0]};
+    //         end
+    //         3'b100:begin
+    //             get_load_val_out = {24'b0, mem_din_};
+    //         end
+    //         3'b101:begin
+    //             get_load_val_out = {16'b0, mem_din_, load_val_[7:0]};
+    //         end
+    //         default:begin
+    //             get_load_val_out = 0;
+    //         end
+    //     endcase
+        
+    // endfunction
+    // assign load_val_out = to_lsb_ready?get_load_val_out(op, load_val,mem_din):32'b0;
+    // assign load_val_out = 1?get_load_val_out(op, load_val,mem_din):32'b0;
+    // assign load_val_out = 23456;
+     assign load_val_out = (to_lsb_ready&&op_type==`LD_TYPE) ? 
+                          (op == 3'b000 ? {{24{mem_din[7]}}, mem_din[7:0]} :
+                          (op == 3'b001 ? {{16{mem_din[7]}}, mem_din[7:0], load_val[7:0]} :
+                          (op == 3'b010 ? {mem_din[7:0], load_val[23:0]} :
+                          (op == 3'b100 ? {24'b0, mem_din[7:0]} :
+                          (op == 3'b101 ? {16'b0, mem_din[7:0], load_val[7:0]} :
+                          32'b0))))) : 32'b0;
+
+    wire [31:0]debug_what  = {24'b0, mem_din};
 endmodule
+
+
+// if(op==3'b000) begin
+        //     get_load_val_out = {{24{mem_din_[7]}}, mem_din_[7:0]};
+        // end
+        // else if(op_==3'b001) begin
+        //     get_load_val_out = {{16{mem_din_[7]}}, mem_din_[7:0], load_val_[7:0]};
+        // end
+        // else if(op_==3'b010) begin
+        //     get_load_val_out = {mem_din_[7:0], load_val_[23:0]};
+        // end
+        // else if(op_==3'b100) begin
+        //     get_load_val_out = {24'b0, mem_din_[7:0]};
+        // end
+        // else if(op_==3'b101) begin
+        //     get_load_val_out = {16'b0, mem_din_[7:0], load_val_[7:0]};
+        // end
+        // else begin
+        //     get_load_val_out = 0;
+        // end
+    // assign load_val_out = 1 ? 
+    //                       (op == 3'b000 ? {{24{mem_din[7]}}, mem_din[7:0]} :
+    //                       (op == 3'b001 ? {{16{mem_din[7]}}, mem_din[7:0], load_val[7:0]} :
+    //                       (op == 3'b010 ? {mem_din[7:0], load_val[23:0]} :
+    //                       (op == 3'b100 ? {24'b0, mem_din[7:0]} :
+    //                       (op == 3'b101 ? {16'b0, mem_din[7:0], load_val[7:0]} :
+    //                       32'b0))))) : 32'b0;
