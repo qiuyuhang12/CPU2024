@@ -56,10 +56,10 @@ module Cache (input wire clk_in,                // system clock signal
         input [31:0] pc_;
         begin
             if (busy_) begin
-                case (bytes_remain_)
-                    3'b011: get_mem_a  = addr_reg_+1;
-                    3'b010: get_mem_a  = addr_reg_+2;
-                    3'b001: get_mem_a  = addr_reg_+3;
+                case (bytes_tot-bytes_remain_)
+                    3'b000: get_mem_a  = addr_reg_+1;
+                    3'b001: get_mem_a  = addr_reg_+2;
+                    3'b010: get_mem_a  = addr_reg_+3;
                     default: get_mem_a = 32'b0;
                 endcase
             end

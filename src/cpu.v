@@ -339,7 +339,7 @@ module cpu(input wire clk_in,               // system clock signal
         end
         else
         begin
-            if (mem_a>32'h20000&&mem_a!=32'h30000&&mem_a!=32'h30004) begin
+            if (mem_wr&&mem_a>32'h20000&&mem_a!=32'h30000&&mem_a!=32'h30004) begin
                 $fatal(1,"Invalid memory address %h", mem_a);
             end
         end
