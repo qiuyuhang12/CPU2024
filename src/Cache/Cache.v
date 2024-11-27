@@ -147,26 +147,31 @@ module Cache (input wire clk_in,                // system clock signal
     
     
     // assign mem_dout = bytes_remain?store_val[bytes_remain<<3-1:bytes_remain<<3-8]:0;
-    function [7:0] get_store_val;
-        input [2:0] bytes_remain_;
-        input [31:0] store_val_;
-        input [7:0] bytes_tot_;
-        begin
-            if (bytes_tot_ == 0) begin
-                get_store_val = store_val_[7:0];
-            end
-            else if (bytes_remain_ == 0) begin
-                get_store_val = 32'b0;
-            end
-            else
-                case (bytes_tot_-bytes_remain_)
-                    3'b010: get_store_val = store_val_[31:24];
-                    3'b001: get_store_val = store_val_[23:16];
-                    3'b000: get_store_val = store_val_[15:8];
-                endcase
-        end
-    endfunction
-    assign mem_dout        = get_store_val(bytes_remain, store_val, bytes_tot);
+    // function [7:0] get_store_val;
+    //     input [2:0] bytes_remain_;
+    //     input [31:0] store_val_;
+    //     input [7:0] bytes_tot_;
+    //     begin
+    //         if (bytes_tot_ == 0) begin
+    //             get_store_val = store_val_in___[7:0];
+    //         end
+    //         else if (bytes_remain_ == 0) begin
+    //             get_store_val = 32'b0;
+    //         end
+    //         else
+    //             case (bytes_tot_-bytes_remain_)
+    //                 3'b010: get_store_val = store_val_[31:24];
+    //                 3'b001: get_store_val = store_val_[23:16];
+    //                 3'b000: get_store_val = store_val_[15:8];
+    //             endcase
+    //     end
+    // endfunction
+    // assign mem_dout        = get_store_val(bytes_remain, store_val, bytes_tot);
+    assign mem_dout = bytes_tot == 0 ? store_val_in[7:0] : 
+                      bytes_remain == 0 ? 8'b0 : 
+                      bytes_tot - bytes_remain == 2 ? store_val[31:24] : 
+                      bytes_tot - bytes_remain == 1 ? store_val[23:16] : 
+                      store_val[15:8];
     // assign load_val_out = load_val;
     // function [31:0] get_load_val_out;
     //     input [2:0] op_;

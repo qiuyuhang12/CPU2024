@@ -17,6 +17,7 @@ module Alu(input wire clk_in,                        // system clock signal
     localparam AddSub = 3'b000, Sll = 3'b001, Slt = 3'b010, Sltu = 3'b011, Xor = 3'b100, SrlSra = 3'b101, Or = 3'b110, And = 3'b111;
     
     localparam Beq = 3'b000, Bne = 3'b001, Blt = 3'b100, Bge = 3'b101, Bltu = 3'b110, Bgeu = 3'b111;
+    wire debug_jump=op_type==`B_TYPE&&op==Beq?vi==vj:op==Bne?vi!=vj:op==Blt?$signed(vi)<$signed(vj):op==Bge?$signed(vi)>=$signed(vj):op==Bltu?$unsigned(vi)<$unsigned(vj):op==Bgeu?$unsigned(vi)>=$unsigned(vj):1'b0;
     always @(posedge clk_in)begin
         if (rst_in||rob_clear_up)begin
             ready         <= 1'b0;

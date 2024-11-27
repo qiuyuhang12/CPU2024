@@ -79,7 +79,7 @@ module Reg(input wire clk_in,                          // system clock signal
             if (debug_rob_empty) begin
                 for (i = 0; i < 32; i = i + 1) begin
                     if (dirty[i]) begin
-                        $fatal(1,"rob_entry[%d] = %d", i, rob_entry[i]);
+                        $fatal(1,"rob_entry[%d] = %d",i,rob_entry[i]);
                     end
                 end
             end

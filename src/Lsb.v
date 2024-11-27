@@ -37,11 +37,11 @@ module Lsb (input wire clk_in,                         // system clock signal
             output wire [`ROB_BIT-1:0] ls_rob_entry,
             output wire [31:0] load_value);
     parameter LEISURE  = 2'b00, ISSUED  = 2'b01, EXECUTING  = 2'b11;
-    parameter [`ROB_BIT-1:0]tmp = (1<<`LSB_BIT)-1;
+    parameter [`LSB_BIT-1:0]tmp = (1<<`LSB_BIT)-1;
     // assign lsb_full = ((tail == head) && busy[tail]) || ((tail + 1 == head) && busy[tail - 1]&&issue_signal);
     assign lsb_full    = ((tail+1-head)&tmp) == 0;
-    reg [`ROB_BIT-1:0] head;
-    reg [`ROB_BIT-1:0] tail;
+    reg [`LSB_BIT-1:0] head;
+    reg [`LSB_BIT-1:0] tail;
     reg mem_executing;
     reg [`ROB_BIT-1:0] mem_executing_rob;
     

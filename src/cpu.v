@@ -277,8 +277,8 @@ module cpu(input wire clk_in,               // system clock signal
     .rd_id(rd_id),                            // input: [`REG_BIT - 1:0]
     .imm_in(imm),                              // input: [31:0] 经过sext/直接issue/br的offset
     .br_predict_in(br_predict),                    // input: 1 jump, 0 not jump
-    .op_type(op_type),                          // input: [6:0] 大
-    .op(op),                               // input: [2:0] 小
+    .op_type_in(op_type),                          // input: [6:0] 大
+    .op_in(op),                               // input: [2:0] 小
     .issue_pollute(issue_pollute_signal),                     // output: /issue to reg //default 0
     .issue_reg_id(issue_reg_id),                     // output: [4:0] to reg /issue to reg //default 0
     .issue_rob_entry(issue_reg_rob_entry),                  // output: [31:0]
@@ -339,7 +339,7 @@ module cpu(input wire clk_in,               // system clock signal
         else
         begin
             if (mem_a>32'h20000&&mem_a!=32'h30000&&mem_a!=32'h30004) begin
-                $fatal(1,"Invalid memory address %d", mem_a);
+                $fatal(1,"Invalid memory address %h", mem_a);
             end
         end
     end

@@ -15,8 +15,8 @@ module Rob(input wire clk_in,                           // system clock signal
            input wire [`REG_BIT - 1:0] rd_id,
            input wire [31:0] imm_in,                    //					经过sext/直接issue/br的offset
            input wire br_predict_in,                    //					1 jump, 0 not jump
-           input wire [6:0]op_type,                     //					大
-           input wire [2:0]op,                          //					小
+           input wire [6:0]op_type_in,                     //					大
+           input wire [2:0]op_in,                          //					小
            output wire issue_pollute,                   // to reg			/issue 			to reg//defualt 0
            output wire [4:0] issue_reg_id,              // 			/issue 			to reg//defualt 0
            output wire [`ROB_BIT-1:0] issue_rob_entry,
@@ -58,8 +58,8 @@ module Rob(input wire clk_in,                           // system clock signal
     parameter [`ROB_BIT-1:0]tmp = (`ROB_BIT'b1<<`ROB_BIT)-1;
     assign rob_full             = ((tail + 1-head)&tmp) == 0;
     // assign rob_full          = 1;
-    wire issue_val_ready=issue_signal&&(op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR);
-    wire issue_val=calculate_value(op_type, imm_in, inst_addr);
+    wire issue_val_ready=issue_signal&&(op_type_in == `LUI || op_type_in == `AUIPC || op_type_in == `JAL || op_type_in == `JALR);
+    wire issue_val=calculate_value(op_type_in, imm_in, inst_addr);
     assign ready1 = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1)||(issue_signal && tail == get_rob_entry1&&issue_val_ready);
     assign value1 = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:issue_val));
     assign ready2 = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2)||(issue_signal && tail == get_rob_entry2&&issue_val_ready);
@@ -106,7 +106,7 @@ module Rob(input wire clk_in,                           // system clock signal
                     $fatal(1,"Assertion failed: wild lsb_rob_entry");
                 end
                 
-                if (rd[rs_rob_entry]) begin
+                if (rd[lsb_rob_entry]&&op_type_save[lsb_rob_entry]!=`S_TYPE) begin
                     value[lsb_rob_entry] <= lsb_value;
                 end
                 prepared[lsb_rob_entry] <= 1;
@@ -133,13 +133,13 @@ module Rob(input wire clk_in,                           // system clock signal
                 busy[tail]       <= 1'b1;
                 insts[tail]      <= inst;
                 insts_addr[tail] <= inst_addr;
-                prepared[tail]     <= (op_type == `LUI || op_type == `AUIPC || op_type == `JAL || op_type == `JALR)?1'b1:1'b0;
+                prepared[tail]     <= (op_type_in == `LUI || op_type_in == `AUIPC || op_type_in == `JAL || op_type_in == `JALR)?1'b1:1'b0;
                 br_predict[tail]   <= br_predict_in;
                 imm[tail]          <= imm_in;
-                op_type_save[tail] <= op_type;
+                op_type_save[tail] <= op_type_in;
                 rd[tail]           <= rd_id;
-                value[tail] <= calculate_value(op_type, imm_in, inst_addr);
-                // case (op_type)
+                value[tail] <= calculate_value(op_type_in, imm_in, inst_addr);
+                // case (op_type_in)
                 //     `LUI:value[tail]       <= imm_in;
                 //     `AUIPC:value[tail]     <= imm_in+inst_addr;
                 //     `JAL,`JALR:value[tail] <= inst_addr+4;
@@ -150,11 +150,11 @@ module Rob(input wire clk_in,                           // system clock signal
     end
     
     function [31:0] calculate_value;
-        input [6:0] op_type;
+        input [6:0] op_type_in;
         input [31:0] imm_in;
         input [31:0] inst_addr;
         begin
-            case (op_type)
+            case (op_type_in)
                 `LUI: calculate_value        = imm_in;
                 `AUIPC: calculate_value      = imm_in + inst_addr;
                 `JAL, `JALR: calculate_value = inst_addr + 4;
@@ -164,11 +164,11 @@ module Rob(input wire clk_in,                           // system clock signal
     endfunction
     
     //issue pollution
-    assign issue_pollute   = issue_signal && op_type!= `B_TYPE && op_type!= `S_TYPE;
+    assign issue_pollute   = issue_signal && op_type_in!= `B_TYPE && op_type_in!= `S_TYPE;
     assign issue_reg_id    = rd_id;
     assign issue_rob_entry = tail;
     //COMMIT
-    assign rob_commit       = busy[head] && prepared[head] && op_type!= `B_TYPE && op_type!= `S_TYPE;
+    assign rob_commit       = busy[head] && prepared[head] && op_type_save[head]!= `B_TYPE && op_type_save[head]!= `S_TYPE;
     assign commit_rd_reg_id = rd[head];
     assign commit_rob_entry = head;
     assign commit_value     = value[head];
