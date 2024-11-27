@@ -66,10 +66,10 @@ module Rob(input wire clk_in,                           // system clock signal
     assign value2 = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:issue_val));
     wire debug_prepared = prepared[head];
     wire debug_busy = busy[head];
-    wire debug_insts = insts[head];
-    wire debug_insts_addr = insts_addr[head];
-    wire debug_rd = rd[head];
-    wire debug_value = value[head];
+    wire [31:0]debug_insts = insts[head];
+    wire [31:0]debug_insts_addr = insts_addr[head];
+    wire [4:0]debug_rd = rd[head];
+    wire [31:0]debug_value = value[head];
     always @(posedge clk_in)
     begin
         if (rst_in || (clear_up && rdy_in)) begin

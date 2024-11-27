@@ -95,24 +95,24 @@ module Rs(input wire clk_in,                       // system clock signal
             for (i = 0; i < `RS_SIZE; i = i + 1) begin
                 if (busy[i]) begin
                     if (lsb_ready)begin
-                        if (rob_entry1[i] == lsb_rob_entry) begin
+                        if (has_dep1[i]&&rob_entry1[i] == lsb_rob_entry) begin
                             reg1_v[i]   <= lsb_value;
                             has_dep1[i] <= 1'b0;
                         end
                         
-                        if (rob_entry2[i] == lsb_rob_entry) begin
+                        if (has_dep2[i]&&rob_entry2[i] == lsb_rob_entry) begin
                             reg2_v[i]   <= lsb_value;
                             has_dep2[i] <= 1'b0;
                         end
                     end
                     
                     if (rs_ready) begin
-                        if (rob_entry1[i] == rs_rob_entry) begin
+                        if (has_dep1[i]&&rob_entry1[i] == rs_rob_entry) begin
                             reg1_v[i]   <= rs_value;
                             has_dep1[i] <= 1'b0;
                         end
                         
-                        if (rob_entry2[i] == rs_rob_entry) begin
+                        if (has_dep2[i]&&rob_entry2[i] == rs_rob_entry) begin
                             reg2_v[i]   <= rs_value;
                             has_dep2[i] <= 1'b0;
                         end

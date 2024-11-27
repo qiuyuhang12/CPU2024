@@ -61,6 +61,40 @@ module Lsb (input wire clk_in,                         // system clock signal
     reg [31:0] value[0:`LSB_SIZE-1];
     reg [31:0] inst[0:`LSB_SIZE-1];
     reg [31:0] inst_addr[0:`LSB_SIZE-1];
+
+    wire debug_busy_head = busy[head];
+    wire [1:0]debug_state_head = state[head];
+    wire [6:0]debug_op_type_head = op_type[head];
+    wire [2:0]debug_op_head = op[head];
+    wire [31:0]debug_imm_head = imm[head];
+    wire [31:0]debug_reg1_v_head = reg1_v[head];
+    wire [31:0]debug_reg2_v_head = reg2_v[head];
+    wire debug_has_dep1_head = has_dep1[head];
+    wire debug_has_dep2_head = has_dep2[head];
+    wire [`ROB_BIT-1:0]debug_rob_entry1_head = rob_entry1[head];
+    wire [`ROB_BIT-1:0]debug_rob_entry2_head = rob_entry2[head];
+    wire [`ROB_BIT-1:0]debug_rob_entry_rd_head = rob_entry_rd[head];
+    wire [31:0]debug_value_head = value[head];
+    wire [31:0]debug_inst_head = inst[head];
+    wire [31:0]debug_inst_addr_head = inst_addr[head];
+
+    //tail-1
+    wire debug_busy_tail_1 = busy[tail-1];
+    wire [1:0]debug_state_tail_1 = state[tail-1];
+    wire [6:0]debug_op_type_tail_1 = op_type[tail-1];
+    wire [2:0]debug_op_tail_1 = op[tail-1];
+    wire [31:0]debug_imm_tail_1 = imm[tail-1];
+    wire [31:0]debug_reg1_v_tail_1 = reg1_v[tail-1];
+    wire [31:0]debug_reg2_v_tail_1 = reg2_v[tail-1];
+    wire debug_has_dep1_tail_1 = has_dep1[tail-1];
+    wire debug_has_dep2_tail_1 = has_dep2[tail-1];
+    wire [`ROB_BIT-1:0]debug_rob_entry1_tail_1 = rob_entry1[tail-1];
+    wire [`ROB_BIT-1:0]debug_rob_entry2_tail_1 = rob_entry2[tail-1];
+    wire [`ROB_BIT-1:0]debug_rob_entry_rd_tail_1 = rob_entry_rd[tail-1];
+    wire [31:0]debug_value_tail_1 = value[tail-1];
+    wire [31:0]debug_inst_tail_1 = inst[tail-1];
+    wire [31:0]debug_inst_addr_tail_1 = inst_addr[tail-1];
+
     
     integer i;
     always @(posedge clk_in) begin
@@ -122,24 +156,24 @@ module Lsb (input wire clk_in,                         // system clock signal
             for (i = 0; i < `LSB_SIZE; i = i + 1) begin
                 if (busy[i]) begin
                     if (rs_ready) begin
-                        if (rob_entry1[i] == rs_rob_entry) begin
+                        if (has_dep1[i]&&rob_entry1[i] == rs_rob_entry) begin
                             reg1_v[i]   <= rs_value;
                             has_dep1[i] <= 1'b0;
                         end
                         
-                        if (rob_entry2[i] == rs_rob_entry) begin
+                        if (has_dep2[i]&&rob_entry2[i] == rs_rob_entry) begin
                             reg2_v[i]   <= rs_value;
                             has_dep2[i] <= 1'b0;
                         end
                     end
                     
                     if (cache_ready) begin
-                        if (rob_entry1[i] == mem_executing_rob) begin
+                        if (has_dep1[i]&&rob_entry1[i] == mem_executing_rob) begin
                             reg1_v[i]   <= load_val_out;
                             has_dep1[i] <= 1'b0;
                         end
                         
-                        if (rob_entry2[i] == mem_executing_rob) begin
+                        if (has_dep2[i]&&rob_entry2[i] == mem_executing_rob) begin
                             reg2_v[i]   <= load_val_out;
                             has_dep2[i] <= 1'b0;
                         end
