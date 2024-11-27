@@ -131,10 +131,15 @@ module Lsb (input wire clk_in,                         // system clock signal
             // do nothing
         end
             else if (rob_clear_up) begin
-            for (i = 0; i < `LSB_SIZE; i = i + 1) begin
+                // lsb_visit_mem <= 0;
+                // op_type_out   <= 7'b0;
+                // op_out        <= 3'b0;
+                // store_addr_out<= 32'b0;
+                // store_val_in  <= 32'b0;
                 head            <= 0;
                 tail            <= 0;
-                mem_executing   <= 0;
+                // mem_executing   <= 0;
+            for (i = 0; i < `LSB_SIZE; i = i + 1) begin
                 busy[i]         <= 1'b0;
                 state[i]        <= 2'b0;
                 op_type[i]      <= 7'b0;
@@ -224,8 +229,9 @@ module Lsb (input wire clk_in,                         // system clock signal
         end
     end
     //broadcast
-    assign lsb_ready     = cache_ready;
-    assign ls_rob_entry = mem_executing_rob;
-    assign load_value   = is_load?load_val_out:0;
+    wire submit_a_store=!rst_in&&rdy_in&&!rob_clear_up&&busy[head]&&!has_dep1[head]&&!has_dep2[head]&&!mem_executing&&cache_welcome_signal&&first_rob_entry == rob_entry_rd[head]&&op_type[head] == `S_TYPE;
+    assign lsb_ready     = cache_ready&&is_load||submit_a_store;
+    assign ls_rob_entry = submit_a_store?rob_entry_rd[head]:mem_executing_rob;
+    assign load_value   = submit_a_store?0:is_load?load_val_out:0;
     
 endmodule
