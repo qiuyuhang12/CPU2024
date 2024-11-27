@@ -1,4 +1,5 @@
-`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+//`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+`include "Const.v"
 
 module Rs_chooser (input wire [`RS_SIZE-1:0] prepared,
                    input wire [`RS_SIZE-1:0] busy,

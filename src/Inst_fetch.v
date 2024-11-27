@@ -1,4 +1,5 @@
-// `include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+// //`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+`include "Const.v"
 
 module Inst_fetcher (input wire clk_in,               // system clock signal
                      input wire rst_in,               // reset signal

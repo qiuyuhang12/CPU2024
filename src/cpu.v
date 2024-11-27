@@ -1,6 +1,7 @@
 // RISCV32 CPU top module
 // port modification allowed for debugging purposes
-`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+//`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+`include "Const.v"
 // `include "Cache/Cache.v"
 // `include "Decoder.v"
 // `include "Inst_fetch.v"

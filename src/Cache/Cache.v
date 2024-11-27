@@ -1,4 +1,6 @@
-`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+//`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v"
+`include "Const.v"
+//attention:因为make命令是-I./src，所以这里不是../Const.v
 
 
 
