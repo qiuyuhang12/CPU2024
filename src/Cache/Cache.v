@@ -168,12 +168,12 @@ module Cache (input wire clk_in,                // system clock signal
     //             endcase
     //     end
     // endfunction
-    // assign mem_dout        = get_store_val(bytes_remain, store_val, bytes_tot);
-    assign mem_dout = bytes_tot == 0 ? store_val_in[7:0] : 
-                      bytes_remain == 0 ? 8'b0 : 
-                      bytes_tot - bytes_remain == 2 ? store_val[31:24] : 
-                      bytes_tot - bytes_remain == 1 ? store_val[23:16] : 
-                      store_val[15:8];
+    // assign mem_dout = get_store_val(bytes_remain, store_val, bytes_tot);
+    assign mem_dout = bytes_tot == 0 ? store_val_in[7:0] :
+    bytes_remain == 0 ? 8'b0 :
+    bytes_tot - bytes_remain == 2 ? store_val[31:24] :
+    bytes_tot - bytes_remain == 1 ? store_val[23:16] :
+    store_val[15:8];
     // assign load_val_out = load_val;
     // function [31:0] get_load_val_out;
     //     input [2:0] op_;
@@ -200,42 +200,42 @@ module Cache (input wire clk_in,                // system clock signal
     //             get_load_val_out = 0;
     //         end
     //     endcase
-        
+                                                      
     // endfunction
     // assign load_val_out = to_lsb_ready?get_load_val_out(op, load_val,mem_din):32'b0;
     // assign load_val_out = 1?get_load_val_out(op, load_val,mem_din):32'b0;
     // assign load_val_out = 23456;
-     assign load_val_out = (to_lsb_ready&&op_type==`LD_TYPE) ? 
-                          (op == 3'b000 ? {{24{mem_din[7]}}, mem_din[7:0]} :
-                          (op == 3'b001 ? {{16{mem_din[7]}}, mem_din[7:0], load_val[7:0]} :
-                          (op == 3'b010 ? {mem_din[7:0], load_val[23:0]} :
-                          (op == 3'b100 ? {24'b0, mem_din[7:0]} :
-                          (op == 3'b101 ? {16'b0, mem_din[7:0], load_val[7:0]} :
-                          32'b0))))) : 32'b0;
-
-    wire [31:0]debug_what  = {24'b0, mem_din};
+    assign load_val_out = (to_lsb_ready&&op_type == `LD_TYPE) ?
+    (op == 3'b000 ? {{24{mem_din[7]}}, mem_din[7:0]} :
+    (op == 3'b001 ? {{16{mem_din[7]}}, mem_din[7:0], load_val[7:0]} :
+    (op == 3'b010 ? {mem_din[7:0], load_val[23:0]} :
+    (op == 3'b100 ? {24'b0, mem_din[7:0]} :
+    (op == 3'b101 ? {16'b0, mem_din[7:0], load_val[7:0]} :
+    32'b0))))) : 32'b0;
+    
+    wire [31:0]debug_what = {24'b0, mem_din};
 endmodule
-
-
-// if(op==3'b000) begin
-        //     get_load_val_out = {{24{mem_din_[7]}}, mem_din_[7:0]};
-        // end
-        // else if(op_==3'b001) begin
-        //     get_load_val_out = {{16{mem_din_[7]}}, mem_din_[7:0], load_val_[7:0]};
-        // end
-        // else if(op_==3'b010) begin
-        //     get_load_val_out = {mem_din_[7:0], load_val_[23:0]};
-        // end
-        // else if(op_==3'b100) begin
-        //     get_load_val_out = {24'b0, mem_din_[7:0]};
-        // end
-        // else if(op_==3'b101) begin
-        //     get_load_val_out = {16'b0, mem_din_[7:0], load_val_[7:0]};
-        // end
-        // else begin
-        //     get_load_val_out = 0;
-        // end
-    // assign load_val_out = 1 ? 
+    
+    
+    // if (op == 3'b000) begin
+    //     get_load_val_out = {{24{mem_din_[7]}}, mem_din_[7:0]};
+    // end
+    // else if (op_ == 3'b001) begin
+    //     get_load_val_out = {{16{mem_din_[7]}}, mem_din_[7:0], load_val_[7:0]};
+    // end
+    // else if (op_ == 3'b010) begin
+    //     get_load_val_out = {mem_din_[7:0], load_val_[23:0]};
+    // end
+    // else if (op_ == 3'b100) begin
+    //     get_load_val_out = {24'b0, mem_din_[7:0]};
+    // end
+    // else if (op_ == 3'b101) begin
+    //     get_load_val_out = {16'b0, mem_din_[7:0], load_val_[7:0]};
+    // end
+    // else begin
+    //     get_load_val_out = 0;
+    // end
+    // assign load_val_out = 1 ?
     //                       (op == 3'b000 ? {{24{mem_din[7]}}, mem_din[7:0]} :
     //                       (op == 3'b001 ? {{16{mem_din[7]}}, mem_din[7:0], load_val[7:0]} :
     //                       (op == 3'b010 ? {mem_din[7:0], load_val[23:0]} :

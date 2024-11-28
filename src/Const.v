@@ -38,18 +38,22 @@
 `define ALGI_TYPE 7'b0010011
 `define R_TYPE 7'b0110011
 
-`define RS_BIT 4 
+`define RS_BIT 4
 `define RS_SIZE (1 << `RS_BIT)
 
 `define LSB_BIT 3
 `define LSB_SIZE (1 << `LSB_BIT)
 
-`define CACHE_SIZE 4
+`define CACHE_BIT 4
+`define CACHE_SIZE (1 << `CACHE_BIT)
+`define TAG_BIT 32-1-`CACHE_BIT
 
 //todo:数据丢失？
 
-//todo:store 可以直接提交 不用等完成，但clear可能会有问题
+//done:store 可以直接提交 不用等完成，但clear可能会有问题
 
 //todo:io_buffer_is_full
 
 //todo:cache优化
+
+//todo:about is_c_in is_c_out

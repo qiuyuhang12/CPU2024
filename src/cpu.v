@@ -115,7 +115,7 @@ module cpu(input wire clk_in,               // system clock signal
     wire cache_ready;
     wire is_load;
     
-    Cache cache_inst (
+    Controller controller_inst (
     .clk_in(clk_in),          // input
     .rst_in(rst_in),          // input
     .rdy_in(rdy_in),          // input

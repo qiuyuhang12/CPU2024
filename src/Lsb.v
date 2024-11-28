@@ -213,7 +213,7 @@ module Lsb (input wire clk_in,                         // system clock signal
                 if (rob_empty) begin
                     $fatal(1,"Error: ROB is empty");
                 end
-                    if (first_rob_entry == rob_entry_rd[head]||op_type[rob_entry_rd[head]] == `LD_TYPE) begin
+                    if (first_rob_entry == rob_entry_rd[head]||op_type[head] == `LD_TYPE) begin
                         lsb_visit_mem     <= 1;
                         op_type_out       <= op_type[head];
                         op_out            <= op[head];
