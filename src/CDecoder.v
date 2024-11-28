@@ -69,6 +69,7 @@ module Decoder (input wire clk_in,                    // system clock signal
     .now_pc(inst_addr),
     .now_inst(inst),
     .val1(val1),
+    .op_type(op_type),
     .imm(imm),
     .next_pc(pc_predictor_next_pc));
     assign next_pc = wrong_predicted ? correct_pc : pc_predictor_next_pc;
