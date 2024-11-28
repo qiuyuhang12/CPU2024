@@ -44,6 +44,7 @@ module Lsb (input wire clk_in,                         // system clock signal
     reg [`LSB_BIT-1:0] head;
     reg [`LSB_BIT-1:0] tail;
     reg mem_executing;
+    reg [6:0]mem_executing_op_type;
     reg [`ROB_BIT-1:0] mem_executing_rob;
     
     
@@ -103,6 +104,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             head              <= 0;
             tail              <= 0;
             mem_executing     <= 0;
+            mem_executing_op_type <= 7'b0;
             mem_executing_rob <= 0;
             lsb_visit_mem     <= 0;
             op_type_out       <= 7'b0;
@@ -139,6 +141,13 @@ module Lsb (input wire clk_in,                         // system clock signal
                 head            <= 0;
                 tail            <= 0;
                 // mem_executing   <= 0;
+                if (mem_executing_op_type==`LD_TYPE) begin
+                    lsb_visit_mem <= 0;
+                    mem_executing <= 0;
+                    mem_executing_op_type <= 7'b0;
+                    op_out <= 3'b0;
+                    op_type_out <= 7'b0;
+                end
             for (i = 0; i < `LSB_SIZE; i = i + 1) begin
                 busy[i]         <= 1'b0;
                 state[i]        <= 2'b0;
@@ -207,6 +216,7 @@ module Lsb (input wire clk_in,                         // system clock signal
             if (mem_executing&&cache_ready) begin
                 mem_executing <= 0;
                 lsb_visit_mem <= 0;
+                mem_executing_op_type <= 7'b0;
             end
             
             if (busy[head]&&!has_dep1[head]&&!has_dep2[head]&&!mem_executing&&cache_welcome_signal) begin
@@ -220,6 +230,7 @@ module Lsb (input wire clk_in,                         // system clock signal
                         store_addr_out    <= reg1_v[head]+imm[head];
                         store_val_in      <= reg2_v[head];
                         mem_executing     <= 1;
+                        mem_executing_op_type <= op_type[head];
                         mem_executing_rob <= rob_entry_rd[head];
                         state[head]       <= EXECUTING;
                         busy[head]        <= 0;

@@ -44,10 +44,10 @@ module Reg(input wire clk_in,                          // system clock signal
     // assign has_dep2       = has_issue2&&!ready2;
     // assign dep2           = issue_reg_id == get_id2?issue_rob_entry:rob_entry[get_id2];
     // assign get_rob_entry2 = dep2;
-    assign val1           = has_dep1?value1:regs[get_id1];
+    assign val1           = dirty[get_id1]?value1:regs[get_id1];
     assign has_dep1       = dirty[get_id1]&&!ready1;
     assign dep1           = has_dep1?rob_entry[get_id1]:0;
-    assign val2           = has_dep2?value2:regs[get_id2];
+    assign val2           = dirty[get_id2]?value2:regs[get_id2];
     assign has_dep2       = dirty[get_id2]&&!ready2;
     assign dep2           = has_dep2?rob_entry[get_id2]:0;
     assign get_rob_entry1 = rob_entry[get_id1];
