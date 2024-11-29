@@ -62,7 +62,7 @@ module CDecoder (input wire clk_in,                    // system clock signal
     // assign rd_id      = no_rd?0:inst[11:7];
     assign rd_rob        = rob_tail;
     assign inst_addr_out = inst_addr;
-    assign inst_out      = inst;
+    assign inst_out      = {1'b0,op_addition,14'b0,inst[15:0]};
     assign jalr_stall    = inst[6:0] == `JALR && has_dep1_;
     wire [31:0]pc_predictor_next_pc;
     CPc_predictor CPc_predictor_inst(
@@ -180,6 +180,29 @@ module CDecoder (input wire clk_in,                    // system clock signal
         endcase
     endfunction
     
+    //todo:赋值位数对不对？
+    wire op_addition;
+    assign op_addition = get_op_addition(inst);
+    function get_op_addition;
+        input [31:0] inst;
+        case (inst[1:0])
+            2'b00,2'b10: get_op_addition = 0;
+            2'b01: begin
+                case (inst[15:13])
+                    3'b100: case (inst[11:10])
+                        2'b01:get_op_addition = 1;
+                        2'b11:case (inst[6:5])
+                            2'b00: get_op_addition = 1;
+                            default: get_op_addition = 0;
+                        endcase
+                        default:get_op_addition = 0;
+                    endcase
+                    default: get_op_addition = 0;
+                endcase
+            end
+        endcase
+    endfunction
+
     assign get_id1 = get_get_id1(inst);
     function [4:0]get_get_id1;
         input [31:0] inst;

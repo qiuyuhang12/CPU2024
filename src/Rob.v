@@ -60,7 +60,7 @@ module Rob(input wire clk_in,                           // system clock signal
     assign rob_full             = ((tail + 1-head)&tmp) == 0;
     // assign rob_full          = 1;
     wire issue_val_ready=issue_signal&&(op_type_in == `LUI || op_type_in == `AUIPC || op_type_in == `JAL || op_type_in == `JALR);
-    wire issue_val=calculate_value(op_type_in, imm_in, inst_addr);
+    wire issue_val=calculate_value(op_type_in, imm_in, inst_addr, inst);
     assign ready1 = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1)||(issue_signal && tail == get_rob_entry1&&issue_val_ready);
     assign value1 = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:issue_val));
     assign ready2 = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2)||(issue_signal && tail == get_rob_entry2&&issue_val_ready);
@@ -139,7 +139,7 @@ module Rob(input wire clk_in,                           // system clock signal
                 imm[tail]          <= imm_in;
                 op_type_save[tail] <= op_type_in;
                 rd[tail]           <= rd_id;
-                value[tail] <= calculate_value(op_type_in, imm_in, inst_addr);
+                value[tail] <= calculate_value(op_type_in, imm_in, inst_addr, inst);
                 // case (op_type_in)
                 //     `LUI:value[tail]       <= imm_in;
                 //     `AUIPC:value[tail]     <= imm_in+inst_addr;
@@ -154,11 +154,12 @@ module Rob(input wire clk_in,                           // system clock signal
         input [6:0] op_type_in;
         input [31:0] imm_in;
         input [31:0] inst_addr;
+        input [31:0] inst;
         begin
             case (op_type_in)
                 `LUI: calculate_value        = imm_in;
                 `AUIPC: calculate_value      = imm_in + inst_addr;
-                `JAL, `JALR: calculate_value = inst_addr + 4;
+                `JAL, `JALR: calculate_value = (inst[1:0]==2'b11 )? inst_addr + 4: inst_addr + 2;
                 default: calculate_value     = 32'h0;
             endcase
         end
@@ -175,6 +176,8 @@ module Rob(input wire clk_in,                           // system clock signal
     assign commit_value     = value[head];
     //wrong_predict
     assign clear_up = busy[head]&&op_type_save[head]==`B_TYPE&&prepared[head]&&value[head][0]!= br_predict[head];
-    assign next_pc  = clear_up?  value[head][0]?insts_addr[head]+imm[head]:insts_addr[head]+32'h4  :0;
+    wire head_is_i = insts[head][1:0]==2'b11;
+    wire [31:0] pc_plus = head_is_i?32'h4:32'h2; 
+    assign next_pc  = clear_up?  value[head][0]?insts_addr[head]+imm[head]:insts_addr[head]+pc_plus  :0;
     
 endmodule
