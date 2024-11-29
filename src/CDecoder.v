@@ -313,7 +313,7 @@ module CDecoder (input wire clk_in,                    // system clock signal
                     3'b001,3'b101: get_imm = {{21{inst[12]}},inst[8],inst[10:9],inst[6],inst[7],inst[2],inst[11],inst[5:3],1'b0};
                     3'b011: begin
                         if (inst[11:7] == 2)get_imm = {{23{inst[12]}},inst[4:3],inst[5],inst[2],inst[6],4'b0};
-                        else get_imm = {{15{inst[17]}},inst[6:2],12'b0};
+                        else get_imm = {{15{inst[12]}},inst[6:2],12'b0};
                     end
                     3'b100: case (inst[11:10])
                         2'b00,2'b01:get_imm = {26'b0,inst[12],inst[6:2]};
