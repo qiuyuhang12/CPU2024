@@ -107,12 +107,12 @@ module CDecoder (input wire clk_in,                    // system clock signal
                     3'b010: get_op_type = `LD_TYPE;
                     3'b100: case (inst[12])
                         1'b0:case (inst[6:2])
-                            1'b0: get_op_type = `JALR;
-                            1'b1: get_op_type = `R_TYPE;
+                            5'b00000: get_op_type = `JALR;
+                            default: get_op_type = `R_TYPE;
                         endcase
                         1'b1:case (inst[6:2])
-                            1'b0: get_op_type = `JALR;
-                            1'b1: get_op_type = `R_TYPE;
+                            5'b00000: get_op_type = `JALR;
+                            default: get_op_type = `R_TYPE;
                         endcase
                     endcase
                     3'b110: get_op_type = `S_TYPE;
@@ -166,12 +166,12 @@ module CDecoder (input wire clk_in,                    // system clock signal
                     3'b010: get_op = Lw;
                     3'b100: case (inst[12])
                         1'b0:case (inst[6:2])
-                            1'b0: get_op = 3'b000;
-                            1'b1: get_op = Add;
+                            5'b00000: get_op = 3'b000;
+                            default: get_op = Add;
                         endcase
                         1'b1:case (inst[6:2])
-                            1'b0: get_op = 3'b000;
-                            1'b1: get_op = Add;
+                            5'b00000: get_op = 3'b000;
+                            default: get_op = Add;
                         endcase
                     endcase
                     3'b110: get_op = Sw;
@@ -207,8 +207,8 @@ module CDecoder (input wire clk_in,                    // system clock signal
                     3'b010: get_get_id1 = 2;
                     3'b100: case (inst[12])
                         1'b0:case (inst[6:2])
-                            1'b0: get_get_id1 = inst[11:7];
-                            1'b1: get_get_id1 = 0;
+                            5'b00000: get_get_id1 = inst[11:7];
+                            default: get_get_id1 = 0;
                         endcase
                         1'b1:get_get_id1 = inst[11:7];
                     endcase
@@ -232,7 +232,7 @@ module CDecoder (input wire clk_in,                    // system clock signal
             end
             2'b10: begin
                 case (inst[15:13])
-                    3'b100: get_get_id2 = inst[6:2];
+                    3'b100,3'b110: get_get_id2 = inst[6:2];
                     default: get_get_id2 = 0;
                 endcase
             end
@@ -261,12 +261,12 @@ module CDecoder (input wire clk_in,                    // system clock signal
                     3'b000,3'b010: get_rd_id = inst[11:7];
                     3'b100: case (inst[12])
                         1'b0:case (inst[6:2])
-                            1'b0: get_rd_id = 0;
-                            1'b1: get_rd_id = inst[11:7];
+                            5'b00000: get_rd_id = 0;
+                            default: get_rd_id = inst[11:7];
                         endcase
                         1'b1:case (inst[6:2])
-                            1'b0: get_rd_id = 1;
-                            1'b1: get_rd_id = inst[11:7];
+                            5'b00000: get_rd_id = 1;
+                            default: get_rd_id = inst[11:7];
                         endcase
                     endcase
                     3'b110: get_rd_id = 0;
