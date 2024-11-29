@@ -64,12 +64,12 @@ module cpu(input wire clk_in,               // system clock signal
     wire [31:0] fetch_inst_addr;
     wire [4:0] fetch_reg1_id=istart_decode?ifetch_reg1_id:cfetch_reg1_id;
     wire [4:0] fetch_reg2_id=istart_decode?ifetch_reg2_id:cfetch_reg2_id;
-    wire [31:0] fetch_reg1_v=istart_decode?ifetch_reg1_v:cfetch_reg1_v;
-    wire [31:0] fetch_reg2_v=istart_decode?ifetch_reg2_v:cfetch_reg2_v;
-    wire fetch_has_dep1=istart_decode?ifetch_has_dep1:cfetch_has_dep1;
-    wire fetch_has_dep2=istart_decode?ifetch_has_dep2:cfetch_has_dep2;
-    wire [`ROB_BIT-1:0] fetch_rob_entry1=istart_decode?ifetch_rob_entry1:cfetch_rob_entry1;
-    wire [`ROB_BIT-1:0] fetch_rob_entry2=istart_decode?ifetch_rob_entry2:cfetch_rob_entry2;
+    wire [31:0] fetch_reg1_v;
+    wire [31:0] fetch_reg2_v;
+    wire fetch_has_dep1;
+    wire fetch_has_dep2;
+    wire [`ROB_BIT-1:0] fetch_rob_entry1;
+    wire [`ROB_BIT-1:0] fetch_rob_entry2;
     wire [4:0] cfetch_reg1_id;
     wire [4:0] cfetch_reg2_id;
     wire [31:0] cfetch_reg1_v;
@@ -230,13 +230,13 @@ module cpu(input wire clk_in,               // system clock signal
     .rs_full(rs_full),                  // input: from rs
     .lsb_full(lsb_full),                 // input: from lsb
     .get_id1(ifetch_reg1_id),                  // output: [4:0] between reg and decoder
-    .val1(ifetch_reg1_v),                     // input: [31:0]
-    .has_dep1_(ifetch_has_dep1),                // input: has dependency 1
-    .dep1(ifetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
+    .val1(fetch_reg1_v),                     // input: [31:0]
+    .has_dep1_(fetch_has_dep1),                // input: has dependency 1
+    .dep1(fetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
     .get_id2(ifetch_reg2_id),                  // output: [4:0]
-    .val2(ifetch_reg2_v),                     // input: [31:0]
-    .has_dep2_(ifetch_has_dep2),                // input: has dependency 2
-    .dep2(ifetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
+    .val2(fetch_reg2_v),                     // input: [31:0]
+    .has_dep2_(fetch_has_dep2),                // input: has dependency 2
+    .dep2(fetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
     );
     CDecoder cdecoder_inst (
     .clk_in(clk_in),             // input: system clock signal
@@ -271,13 +271,13 @@ module cpu(input wire clk_in,               // system clock signal
     .rs_full(rs_full),                  // input: from rs
     .lsb_full(lsb_full),                 // input: from lsb
     .get_id1(cfetch_reg1_id),                  // output: [4:0] between reg and decoder
-    .val1(cfetch_reg1_v),                     // input: [31:0]
-    .has_dep1_(cfetch_has_dep1),                // input: has dependency 1
-    .dep1(cfetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
+    .val1(fetch_reg1_v),                     // input: [31:0]
+    .has_dep1_(fetch_has_dep1),                // input: has dependency 1
+    .dep1(fetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
     .get_id2(cfetch_reg2_id),                  // output: [4:0]
-    .val2(cfetch_reg2_v),                     // input: [31:0]
-    .has_dep2_(cfetch_has_dep2),                // input: has dependency 2
-    .dep2(cfetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
+    .val2(fetch_reg2_v),                     // input: [31:0]
+    .has_dep2_(fetch_has_dep2),                // input: has dependency 2
+    .dep2(fetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
     );
     Inst_fetcher inst_fetcher_inst (
     .clk_in(clk_in),               // input: system clock signal
@@ -285,7 +285,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rdy_in(rdy_in),               // input: ready signal, pause cpu when low
     .rob_clear_up(rob_clear_up),         // input
     .rob_next_pc(clear_next_pc),          // input: [31:0]
-    .is_c(is_i),                 // output
+    .is_i(is_i),                 // output
     .pc(pc),                   // output: [31:0] between cache
     .start_fetch(should_fetch),          // output
     .fetch_ready(fetch_ready),          // input

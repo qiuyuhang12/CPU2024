@@ -10,7 +10,7 @@ module ICache #(parameter CACHE_BIT = `CACHE_BIT,
                 input wire wr,                    // 1 for write
                 input wire [31:0] addr,           //addr[0] = 0
                 input wire [31:0] inst_in,
-                output wire is_c_out,
+                output wire is_i_out,
                 output wire hit,
                 output wire [31:0] inst_out);
 reg exist[0:CACHE_SIZE-1];
@@ -22,8 +22,8 @@ wire [TAG_BIT-1:0] tag1, tag2;//f(addr)
 wire hit1, hit2;
 wire [15:0] buffer1, buffer2;
 wire [15:0] inst_in1, inst_in2;
-wire is_c_in    = inst_in[1:0] == 2'b11;
-assign is_c_out = inst_out[1:0] == 2'b11;
+wire is_i_in    = inst_in[1:0] == 2'b11;
+assign is_i_out = inst_out[1:0] == 2'b11;
 assign addr1    = addr;
 assign addr2    = addr1 + 2;
 assign index1   = addr1[CACHE_BIT:1];

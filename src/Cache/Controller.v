@@ -23,7 +23,7 @@ module Controller (input wire clk_in,                // system clock signal
                    //todo:is_i
     wire icache_hit;
     wire [31:0] icache_inst_out;
-    wire icache_is_c_out;
+    wire icache_is_i_out;
     ICache icache(.clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
@@ -31,7 +31,7 @@ module Controller (input wire clk_in,                // system clock signal
     .wr(cache_fetch_ready),
     .addr(cache_fetch_ready?inst_addr:pc),
     .inst_in(cache_inst),
-    .is_c_out(icache_is_c_out),
+    .is_i_out(icache_is_i_out),
     .hit(icache_hit),
     .inst_out(icache_inst_out));
     Cache cache(.clk_in(clk_in),

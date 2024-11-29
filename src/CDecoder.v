@@ -1,7 +1,7 @@
 /*`include "/run/media/grace/archlinux_data/verilog_file/CPU2024/src/Const.v" */
 `include "Const.v"
 
-module Decoder (input wire clk_in,                    // system clock signal
+module CDecoder (input wire clk_in,                    // system clock signal
                 input wire rst_in,                    // reset signal
                 input wire rdy_in,                    // ready signal, pause cpu when low
                 input wire wrong_predicted,           // from rob
