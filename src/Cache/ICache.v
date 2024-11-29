@@ -22,8 +22,8 @@ wire [TAG_BIT-1:0] tag1, tag2;//f(addr)
 wire hit1, hit2;
 wire [15:0] buffer1, buffer2;
 wire [15:0] inst_in1, inst_in2;
-wire is_c_in    = 0;//f(inst_in)
-assign is_c_out = 0;
+wire is_c_in    = inst_in[1:0] == 2'b11;
+assign is_c_out = inst_out[1:0] == 2'b11;
 assign addr1    = addr;
 assign addr2    = addr1 + 2;
 assign index1   = addr1[CACHE_BIT:1];

@@ -6,6 +6,7 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
                      input wire rdy_in,               // ready signal, pause cpu when low
                      input wire rob_clear_up,
                      input wire [31:0]rob_next_pc,
+                     output wire is_c,
                      output reg [31:0] pc,            // between cache
                      output reg start_fetch,
                      input wire fetch_ready,
@@ -17,6 +18,7 @@ module Inst_fetcher (input wire clk_in,               // system clock signal
                      input wire [31:0] pc_predictor_next_pc,
                      input wire issue_signal);
     wire [31:0]next_pc = rob_clear_up?rob_next_pc:pc_predictor_next_pc;
+    assign is_i = inst_out[1:0]==2'b11;
     reg active_inst_unissued;
     always @(posedge clk_in) begin
         if (rst_in) begin

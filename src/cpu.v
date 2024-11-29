@@ -49,38 +49,95 @@ module cpu(input wire clk_in,               // system clock signal
     wire [31:0] fetch_inst_addr0;
     //fetch(pre_issue)(inst_fetcher&decoder)
     wire start_decode;
-    wire [31:0] next_pc;
+    wire is_i;
+    wire istart_decode=start_decode&&is_i;
+    wire cstart_decode=start_decode&&!is_i;
+    wire [31:0] next_pc=istart_decode?inext_pc:cnext_pc;
+    wire [31:0] cnext_pc;
+    wire [31:0] inext_pc;
     wire fetch_ready;
-    wire jalr_stall;
+    wire jalr_stall=istart_decode?ijalr_stall:cjalr_stall;
+    wire cjalr_stall;
+    wire ijalr_stall;
     wire [31:0] fetch_next_pc;
     wire [31:0] fetch_inst;
     wire [31:0] fetch_inst_addr;
-    wire [4:0] fetch_reg1_id;
-    wire [4:0] fetch_reg2_id;
-    wire [31:0] fetch_reg1_v;
-    wire [31:0] fetch_reg2_v;
-    wire fetch_has_dep1;
-    wire fetch_has_dep2;
-    wire [`ROB_BIT-1:0] fetch_rob_entry1;
-    wire [`ROB_BIT-1:0] fetch_rob_entry2;
+    wire [4:0] fetch_reg1_id=istart_decode?ifetch_reg1_id:cfetch_reg1_id;
+    wire [4:0] fetch_reg2_id=istart_decode?ifetch_reg2_id:cfetch_reg2_id;
+    wire [31:0] fetch_reg1_v=istart_decode?ifetch_reg1_v:cfetch_reg1_v;
+    wire [31:0] fetch_reg2_v=istart_decode?ifetch_reg2_v:cfetch_reg2_v;
+    wire fetch_has_dep1=istart_decode?ifetch_has_dep1:cfetch_has_dep1;
+    wire fetch_has_dep2=istart_decode?ifetch_has_dep2:cfetch_has_dep2;
+    wire [`ROB_BIT-1:0] fetch_rob_entry1=istart_decode?ifetch_rob_entry1:cfetch_rob_entry1;
+    wire [`ROB_BIT-1:0] fetch_rob_entry2=istart_decode?ifetch_rob_entry2:cfetch_rob_entry2;
+    wire [4:0] cfetch_reg1_id;
+    wire [4:0] cfetch_reg2_id;
+    wire [31:0] cfetch_reg1_v;
+    wire [31:0] cfetch_reg2_v;
+    wire cfetch_has_dep1;
+    wire cfetch_has_dep2;
+    wire [`ROB_BIT-1:0] cfetch_rob_entry1;
+    wire [`ROB_BIT-1:0] cfetch_rob_entry2;
+    wire [4:0] ifetch_reg1_id;
+    wire [4:0] ifetch_reg2_id;
+    wire [31:0] ifetch_reg1_v;
+    wire [31:0] ifetch_reg2_v;
+    wire ifetch_has_dep1;
+    wire ifetch_has_dep2;
+    wire [`ROB_BIT-1:0] ifetch_rob_entry1;
+    wire [`ROB_BIT-1:0] ifetch_rob_entry2;
     //issue(decoder&rob...)
-    wire issue_signal;
-    wire issue_signal_rs;
-    wire issue_signal_lsb;
-    wire br_predict;
-    wire [31:0] inst;
-    wire [31:0] inst_addr;
-    wire [6:0] op_type;
-    wire [2:0] op;
-    wire has_dep1;
-    wire has_dep2;
-    wire [`ROB_BIT-1:0] rob_entry1;
-    wire [`ROB_BIT-1:0] rob_entry2;
-    wire [31:0] reg1_v;
-    wire [31:0] reg2_v;
-    wire [31:0] imm;
-    wire [4:0]rd_id;
-    wire [`ROB_BIT-1:0] rd_rob;
+    wire issue_signal=istart_decode?iissue_signal:cissue_signal;
+    wire issue_signal_rs=istart_decode?iissue_signal_rs:cissue_signal_rs;
+    wire issue_signal_lsb=istart_decode?iissue_signal_lsb:cissue_signal_lsb;
+    wire cissue_signal;
+    wire cissue_signal_rs;
+    wire cissue_signal_lsb;
+    wire iissue_signal;
+    wire iissue_signal_rs;
+    wire iissue_signal_lsb;
+    wire br_predict=istart_decode?ibr_predict:cbr_predict;
+    wire cbr_predict;
+    wire ibr_predict;
+    wire [31:0] inst=istart_decode?iinst:cinst;
+    wire [31:0] inst_addr=istart_decode?iinst_addr:cinst_addr;
+    wire [31:0] cinst;
+    wire [31:0] cinst_addr;
+    wire [31:0] iinst;
+    wire [31:0] iinst_addr;
+    wire [6:0] op_type=istart_decode?iop_type:cop_type;
+    wire [2:0] op=istart_decode?iop:cop;
+    wire has_dep1=istart_decode?ihas_dep1:chas_dep1;
+    wire has_dep2=istart_decode?ihas_dep2:chas_dep2;
+    wire [`ROB_BIT-1:0] rob_entry1=istart_decode?irob_entry1:crob_entry1;
+    wire [`ROB_BIT-1:0] rob_entry2=istart_decode?irob_entry2:crob_entry2;
+    wire [31:0] reg1_v=istart_decode?ireg1_v:creg1_v;
+    wire [31:0] reg2_v=istart_decode?ireg2_v:creg2_v;
+    wire [31:0] imm=istart_decode?iimm:cimm;
+    wire [4:0] rd_id=istart_decode?ird_id:crd_id;
+    wire [`ROB_BIT-1:0] rd_rob=istart_decode?ird_rob:crd_rob;
+    wire [6:0] cop_type;
+    wire [2:0] cop;
+    wire chas_dep1;
+    wire chas_dep2;
+    wire [`ROB_BIT-1:0] crob_entry1;
+    wire [`ROB_BIT-1:0] crob_entry2;
+    wire [31:0] creg1_v;
+    wire [31:0] creg2_v;
+    wire [31:0] cimm;
+    wire [4:0] crd_id;
+    wire [`ROB_BIT-1:0] crd_rob;
+    wire [6:0] iop_type;
+    wire [2:0] iop;
+    wire ihas_dep1;
+    wire ihas_dep2;
+    wire [`ROB_BIT-1:0] irob_entry1;
+    wire [`ROB_BIT-1:0] irob_entry2;
+    wire [31:0] ireg1_v;
+    wire [31:0] ireg2_v;
+    wire [31:0] iimm;
+    wire [4:0] ird_id;
+    wire [`ROB_BIT-1:0] ird_rob;
     //rob issue reg
     wire issue_pollute_signal;
     wire [4:0] issue_reg_id;
@@ -139,46 +196,88 @@ module cpu(input wire clk_in,               // system clock signal
     .inst(fetch_inst0),            // output
     .inst_addr(fetch_inst_addr0)        // output
     );
+    //todo： add i
     Decoder decoder_inst (
     .clk_in(clk_in),             // input: system clock signal
     .rst_in(rst_in),             // input: reset signal
     .rdy_in(rdy_in),             // input: ready signal, pause cpu when low
     .wrong_predicted(rob_clear_up),          // input: from rob
     .correct_pc(clear_next_pc),               // input: [31:0]
-    .next_pc(next_pc),                  // output: [31:0] to inst fetcher
-    .jalr_stall(jalr_stall),               // output
+    .next_pc(inext_pc),                  // output: [31:0] to inst fetcher
+    .jalr_stall(ijalr_stall),               // output
     .inst_addr(fetch_inst_addr),                // input: [31:0]
     .inst(fetch_inst),                     // input: [31:0]
-    .start_decode(start_decode),              // input: start decoder
-    .br_predict(br_predict),                    // output: to rob
-    .issue_signal(issue_signal),             // output: to rob inst_fetcher
-    .issue_signal_rs(issue_signal_rs),          // output: to rs
-    .issue_signal_lsb(issue_signal_lsb),         // output: to lsb
-    .imm(imm),                      // output: [31:0] 经过sext/直接issue/br的offset
-    .op_type(op_type),                  // output: [6:0] operation type
-    .op(op),                       // output: [2:0] operation
-    .reg1_v(reg1_v),                   // output: [31:0] register 1 value
-    .reg2_v(reg2_v),                   // output: [31:0] register 2 value
-    .has_dep1(has_dep1),                 // output: has dependency 1
-    .has_dep2(has_dep2),                 // output: has dependency 2
-    .rob_entry1(rob_entry1),               // output: [`ROB_BIT-1] rob entry 1
-    .rob_entry2(rob_entry2),               // output: [`ROB_BIT-1] rob entry 2
-    .rd_id(rd_id),                    // output: destination register
-    .rd_rob(rd_rob),                   // output: [31:0] rob entry for destination register
-    .inst_out(inst),                 // output: [31:0] instruction
-    .inst_addr_out(inst_addr),            // output: [31:0] instruction address
+    .start_decode(istart_decode),              // input: start decoder
+    .br_predict(ibr_predict),                    // output: to rob
+    .issue_signal(iissue_signal),             // output: to rob inst_fetcher
+    .issue_signal_rs(iissue_signal_rs),          // output: to rs
+    .issue_signal_lsb(iissue_signal_lsb),         // output: to lsb
+    .imm(iimm),                      // output: [31:0] 经过sext/直接issue/br的offset
+    .op_type(iop_type),                  // output: [6:0] operation type
+    .op(iop),                       // output: [2:0] operation
+    .reg1_v(ireg1_v),                   // output: [31:0] register 1 value
+    .reg2_v(ireg2_v),                   // output: [31:0] register 2 value
+    .has_dep1(ihas_dep1),                 // output: has dependency 1
+    .has_dep2(ihas_dep2),                 // output: has dependency 2
+    .rob_entry1(irob_entry1),               // output: [`ROB_BIT-1] rob entry 1
+    .rob_entry2(irob_entry2),               // output: [`ROB_BIT-1] rob entry 2
+    .rd_id(ird_id),                    // output: destination register
+    .rd_rob(ird_rob),                   // output: [31:0] rob entry for destination register
+    .inst_out(iinst),                 // output: [31:0] instruction
+    .inst_addr_out(iinst_addr),            // output: [31:0] instruction address
     .rob_full(rob_full),                 // input: from rob
     .rob_tail(rob_tail),                 // input: [`ROB_BIT-1:0]
     .rs_full(rs_full),                  // input: from rs
     .lsb_full(lsb_full),                 // input: from lsb
-    .get_id1(fetch_reg1_id),                  // output: [4:0] between reg and decoder
-    .val1(fetch_reg1_v),                     // input: [31:0]
-    .has_dep1_(fetch_has_dep1),                // input: has dependency 1
-    .dep1(fetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
-    .get_id2(fetch_reg2_id),                  // output: [4:0]
-    .val2(fetch_reg2_v),                     // input: [31:0]
-    .has_dep2_(fetch_has_dep2),                // input: has dependency 2
-    .dep2(fetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
+    .get_id1(ifetch_reg1_id),                  // output: [4:0] between reg and decoder
+    .val1(ifetch_reg1_v),                     // input: [31:0]
+    .has_dep1_(ifetch_has_dep1),                // input: has dependency 1
+    .dep1(ifetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
+    .get_id2(ifetch_reg2_id),                  // output: [4:0]
+    .val2(ifetch_reg2_v),                     // input: [31:0]
+    .has_dep2_(ifetch_has_dep2),                // input: has dependency 2
+    .dep2(ifetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
+    );
+    CDecoder cdecoder_inst (
+    .clk_in(clk_in),             // input: system clock signal
+    .rst_in(rst_in),             // input: reset signal
+    .rdy_in(rdy_in),             // input: ready signal, pause cpu when low
+    .wrong_predicted(rob_clear_up),          // input: from rob
+    .correct_pc(clear_next_pc),               // input: [31:0]
+    .next_pc(cnext_pc),                  // output: [31:0] to inst fetcher
+    .jalr_stall(cjalr_stall),               // output
+    .inst_addr(fetch_inst_addr),                // input: [31:0]
+    .inst(fetch_inst),                     // input: [31:0]
+    .start_decode(cstart_decode),              // input: start decoder
+    .br_predict(cbr_predict),                    // output: to rob
+    .issue_signal(cissue_signal),             // output: to rob inst_fetcher
+    .issue_signal_rs(cissue_signal_rs),          // output: to rs
+    .issue_signal_lsb(cissue_signal_lsb),         // output: to lsb
+    .imm(cimm),                      // output: [31:0] 经过sext/直接issue/br的offset
+    .op_type(cop_type),                  // output: [6:0] operation type
+    .op(cop),                       // output: [2:0] operation
+    .reg1_v(creg1_v),                   // output: [31:0] register 1 value
+    .reg2_v(creg2_v),                   // output: [31:0] register 2 value
+    .has_dep1(chas_dep1),                 // output: has dependency 1
+    .has_dep2(chas_dep2),                 // output: has dependency 2
+    .rob_entry1(crob_entry1),               // output: [`ROB_BIT-1] rob entry 1
+    .rob_entry2(crob_entry2),               // output: [`ROB_BIT-1] rob entry 2
+    .rd_id(crd_id),                    // output: destination register
+    .rd_rob(crd_rob),                   // output: [31:0] rob entry for destination register
+    .inst_out(cinst),                 // output: [31:0] instruction
+    .inst_addr_out(cinst_addr),            // output: [31:0] instruction address
+    .rob_full(rob_full),                 // input: from rob
+    .rob_tail(rob_tail),                 // input: [`ROB_BIT-1:0]
+    .rs_full(rs_full),                  // input: from rs
+    .lsb_full(lsb_full),                 // input: from lsb
+    .get_id1(cfetch_reg1_id),                  // output: [4:0] between reg and decoder
+    .val1(cfetch_reg1_v),                     // input: [31:0]
+    .has_dep1_(cfetch_has_dep1),                // input: has dependency 1
+    .dep1(cfetch_rob_entry1),                     // input: [`ROB_BIT - 1:0]
+    .get_id2(cfetch_reg2_id),                  // output: [4:0]
+    .val2(cfetch_reg2_v),                     // input: [31:0]
+    .has_dep2_(cfetch_has_dep2),                // input: has dependency 2
+    .dep2(cfetch_rob_entry2)                      // input: [`ROB_BIT - 1:0]
     );
     Inst_fetcher inst_fetcher_inst (
     .clk_in(clk_in),               // input: system clock signal
@@ -186,6 +285,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rdy_in(rdy_in),               // input: ready signal, pause cpu when low
     .rob_clear_up(rob_clear_up),         // input
     .rob_next_pc(clear_next_pc),          // input: [31:0]
+    .is_c(is_i),                 // output
     .pc(pc),                   // output: [31:0] between cache
     .start_fetch(should_fetch),          // output
     .fetch_ready(fetch_ready),          // input

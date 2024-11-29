@@ -20,6 +20,7 @@ module Controller (input wire clk_in,                // system clock signal
                    output wire fetch_ready,
                    output wire [31:0] inst,
                    output wire [31:0] inst_addr);
+                   //todo:is_i
     wire icache_hit;
     wire [31:0] icache_inst_out;
     wire icache_is_c_out;
