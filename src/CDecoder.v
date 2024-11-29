@@ -63,7 +63,7 @@ module CDecoder (input wire clk_in,                    // system clock signal
     assign rd_rob        = rob_tail;
     assign inst_addr_out = inst_addr;
     assign inst_out      = {1'b0,op_addition,14'b0,inst[15:0]};
-    assign jalr_stall    = inst[6:0] == `JALR && has_dep1_;
+    assign jalr_stall    = op_type == `JALR && has_dep1_;
     wire [31:0]pc_predictor_next_pc;
     CPc_predictor CPc_predictor_inst(
     .now_pc(inst_addr),
@@ -305,7 +305,7 @@ module CDecoder (input wire clk_in,                    // system clock signal
             2'b00: case (inst[15:13])
             //uimm[5:4|9:6|2|3]
                 3'b000: get_imm = {22'b0,inst[10:7],inst[12:11],inst[5],inst[6],2'b0};
-                default: get_imm = {24'b0,inst[5],inst[12:10],inst[6],2'b0};
+                default: get_imm = {25'b0,inst[5],inst[12:10],inst[6],2'b0};
             endcase
             2'b01: begin
                 case (inst[15:13])
