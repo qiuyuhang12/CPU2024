@@ -61,10 +61,10 @@ module Rob(input wire clk_in,                           // system clock signal
     // assign rob_full          = 1;
     wire issue_val_ready=issue_signal&&(op_type_in == `LUI || op_type_in == `AUIPC || op_type_in == `JAL || op_type_in == `JALR);
     wire issue_val=calculate_value(op_type_in, imm_in, inst_addr, inst);
-    assign ready1 = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1)||(issue_signal && tail == get_rob_entry1&&issue_val_ready);
-    assign value1 = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:issue_val));
-    assign ready2 = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2)||(issue_signal && tail == get_rob_entry2&&issue_val_ready);
-    assign value2 = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:issue_val));
+    assign ready1 = prepared[get_rob_entry1] || (rs_ready_bd && rs_rob_entry == get_rob_entry1) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry1);//||(issue_signal && tail == get_rob_entry1&&issue_val_ready);
+    assign value1 = prepared[get_rob_entry1] ? value[get_rob_entry1]:((rs_ready_bd && rs_rob_entry == get_rob_entry1)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry1)?lsb_value:0));//issue_val));
+    assign ready2 = prepared[get_rob_entry2] || (rs_ready_bd && rs_rob_entry == get_rob_entry2) || (lsb_ready_bd && lsb_rob_entry == get_rob_entry2);//||(issue_signal && tail == get_rob_entry2&&issue_val_ready);
+    assign value2 = prepared[get_rob_entry2] ? value[get_rob_entry2]:((rs_ready_bd && rs_rob_entry == get_rob_entry2)?rs_value:((lsb_ready_bd && lsb_rob_entry == get_rob_entry2)?lsb_value:0));//issue_val));
     wire debug_prepared = prepared[head];
     wire debug_busy = busy[head];
     wire [31:0]debug_insts = insts[head];

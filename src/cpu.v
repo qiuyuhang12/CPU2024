@@ -44,7 +44,7 @@ module cpu(input wire clk_in,               // system clock signal
     //fetch(visit_mem)(inst_fetcher&cache)
     wire should_fetch;
     wire [31:0] pc;
-    wire [31:0] fetch_next_pc0;
+    // wire [31:0] fetch_next_pc0;
     wire [31:0] fetch_inst0;
     wire [31:0] fetch_inst_addr0;
     //fetch(pre_issue)(inst_fetcher&decoder)
@@ -59,7 +59,7 @@ module cpu(input wire clk_in,               // system clock signal
     wire jalr_stall=istart_decode?ijalr_stall:cjalr_stall;
     wire cjalr_stall;
     wire ijalr_stall;
-    wire [31:0] fetch_next_pc;
+    // wire [31:0] fetch_next_pc;
     wire [31:0] fetch_inst;
     wire [31:0] fetch_inst_addr;
     wire [4:0] fetch_reg1_id=istart_decode?ifetch_reg1_id:cfetch_reg1_id;
@@ -72,20 +72,20 @@ module cpu(input wire clk_in,               // system clock signal
     wire [`ROB_BIT-1:0] fetch_rob_entry2;
     wire [4:0] cfetch_reg1_id;
     wire [4:0] cfetch_reg2_id;
-    wire [31:0] cfetch_reg1_v;
-    wire [31:0] cfetch_reg2_v;
-    wire cfetch_has_dep1;
-    wire cfetch_has_dep2;
-    wire [`ROB_BIT-1:0] cfetch_rob_entry1;
-    wire [`ROB_BIT-1:0] cfetch_rob_entry2;
+    // wire [31:0] cfetch_reg1_v;
+    // wire [31:0] cfetch_reg2_v;
+    // wire cfetch_has_dep1;
+    // wire cfetch_has_dep2;
+    // wire [`ROB_BIT-1:0] cfetch_rob_entry1;
+    // wire [`ROB_BIT-1:0] cfetch_rob_entry2;
     wire [4:0] ifetch_reg1_id;
     wire [4:0] ifetch_reg2_id;
-    wire [31:0] ifetch_reg1_v;
-    wire [31:0] ifetch_reg2_v;
-    wire ifetch_has_dep1;
-    wire ifetch_has_dep2;
-    wire [`ROB_BIT-1:0] ifetch_rob_entry1;
-    wire [`ROB_BIT-1:0] ifetch_rob_entry2;
+    // wire [31:0] ifetch_reg1_v;
+    // wire [31:0] ifetch_reg2_v;
+    // wire ifetch_has_dep1;
+    // wire ifetch_has_dep2;
+    // wire [`ROB_BIT-1:0] ifetch_rob_entry1;
+    // wire [`ROB_BIT-1:0] ifetch_rob_entry2;
     //issue(decoder&rob...)
     wire issue_signal=istart_decode?iissue_signal:cissue_signal;
     wire issue_signal_rs=istart_decode?iissue_signal_rs:cissue_signal_rs;
@@ -177,6 +177,7 @@ module cpu(input wire clk_in,               // system clock signal
     .rst_in(rst_in),          // input
     .rdy_in(rdy_in),          // input
     .rob_clear_up(rob_clear_up),    // input
+    .io_buffer_full(io_buffer_full), // input
     .mem_wr(mem_wr),          // output
     .mem_a(mem_a),        // output
     .mem_dout(mem_dout),          // output

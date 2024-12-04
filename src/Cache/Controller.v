@@ -2,6 +2,7 @@ module Controller (input wire clk_in,                // system clock signal
                    input wire rst_in,                // reset signal
                    input wire rdy_in,                // ready signal, pause cpu when low
                    input wire rob_clear_up,
+                   input wire io_buffer_full,
                    output wire mem_wr,               // to ram			write/read signal (1 for write)
                    output wire [31:0] mem_a,         //				memory address
                    output wire [7:0] mem_dout,       //				data input
@@ -29,15 +30,16 @@ module Controller (input wire clk_in,                // system clock signal
     .rdy_in(rdy_in),
     .rob_clear_up(rob_clear_up),
     .wr(cache_fetch_ready),
-    .addr(cache_fetch_ready?inst_addr:pc),
+    .addr(cache_fetch_ready?cache_inst_addr:pc),
     .inst_in(cache_inst),
     .is_i_out(icache_is_i_out),
     .hit(icache_hit),
     .inst_out(icache_inst_out));
-    Cache cache(.clk_in(clk_in),
+    Memory_controller memory_controller(.clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
     .rob_clear_up(rob_clear_up),
+    .io_buffer_full(io_buffer_full),
     .mem_wr(mem_wr),
     .mem_a(mem_a),
     .mem_dout(mem_dout),
@@ -59,7 +61,7 @@ module Controller (input wire clk_in,                // system clock signal
     wire cache_fetch_ready;
     wire [31:0]cache_inst;
     wire [31:0]cache_inst_addr;
-    assign fetch_ready = start_fetch&&icache_hit||cache_fetch_ready;
+    assign fetch_ready = start_fetch&&(icache_hit||cache_fetch_ready);
     assign inst = icache_hit?icache_inst_out:cache_inst;
     assign inst_addr = icache_hit?pc:cache_inst_addr;
     always @(posedge clk_in) begin

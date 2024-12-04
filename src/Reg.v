@@ -32,7 +32,7 @@ module Reg(input wire clk_in,                          // system clock signal
     reg [31:0] dirty;
     reg [`ROB_BIT-1:0] rob_entry [0:31];
     wire [31:0]debug_regs_8 = regs[8];
-    wire has_issue1;
+//    wire has_issue1;
     // assign has_issue1     = dirty[get_id1]||(issue_pollute&&issue_reg_id&&get_id1 == issue_reg_id);
     // assign val1           = has_issue1?value1:regs[get_id1];
     // assign has_dep1       = has_issue1&&!ready1;

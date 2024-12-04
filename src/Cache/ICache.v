@@ -25,7 +25,7 @@ wire [15:0] inst_in1, inst_in2;
 wire is_i_in    = inst_in[1:0] == 2'b11;
 assign is_i_out = inst_out[1:0] == 2'b11;
 assign addr1    = addr;
-assign addr2    = addr1 + 2;
+assign addr2    = addr + 2;
 assign index1   = addr1[CACHE_BIT:1];
 assign index2   = addr2[CACHE_BIT:1];
 assign tag1     = addr1[31:CACHE_BIT+1];

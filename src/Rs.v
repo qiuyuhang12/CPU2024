@@ -26,20 +26,20 @@ module Rs(input wire clk_in,                       // system clock signal
           output wire rs_full);
     wire [`ROB_BIT-1:0]debug_rob_entry_0 = rd_rob[0];
     wire [`ROB_BIT-1:0]debug_rob_entry_1 = rd_rob[1];
-    wire [0:`RS_SIZE-1]debug_has_dep1;
-    wire [0:`RS_SIZE-1]debug_has_dep2;
-    wire [0:`RS_SIZE-1][`ROB_BIT-1:0]debug_rob_entry1;
-    wire [0:`RS_SIZE-1][`ROB_BIT-1:0]debug_rob_entry2;
-    wire [0:`RS_SIZE-1][`ROB_BIT-1:0]debug_rd_rob;
+    // wire [0:`RS_SIZE-1]debug_has_dep1;
+    // wire [0:`RS_SIZE-1]debug_has_dep2;
+//    wire [0:`RS_SIZE-1][`ROB_BIT-1:0]debug_rob_entry1;
+//    wire [0:`RS_SIZE-1][`ROB_BIT-1:0]debug_rob_entry2;
+//    wire [0:`RS_SIZE-1][`ROB_BIT-1:0]debug_rd_rob;
     generate
     genvar iii;
-    for (iii = 0; iii < `RS_SIZE; iii = iii + 1) begin: gen2
-    assign debug_has_dep1[iii]   = has_dep1[iii];
-    assign debug_has_dep2[iii]   = has_dep2[iii];
-    assign debug_rob_entry1[iii] = rob_entry1[iii];
-    assign debug_rob_entry2[iii] = rob_entry2[iii];
-    assign debug_rd_rob[iii]     = rd_rob[iii];
-    end
+//     for (iii = 0; iii < `RS_SIZE; iii = iii + 1) begin: gen2
+//     // assign debug_has_dep1[iii]   = has_dep1[iii];
+//     // assign debug_has_dep2[iii]   = has_dep2[iii];
+// //    assign debug_rob_entry1[iii] = rob_entry1[iii];
+// //    assign debug_rob_entry2[iii] = rob_entry2[iii];
+// //    assign debug_rd_rob[iii]     = rd_rob[iii];
+//     end
     endgenerate
     reg busy [0:`RS_SIZE-1];
     reg [6:0] op_type [0:`RS_SIZE-1];//[6:0]

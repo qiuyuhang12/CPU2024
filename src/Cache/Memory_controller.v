@@ -5,10 +5,11 @@
 
 
 
-module Cache (input wire clk_in,                // system clock signal
+module Memory_controller (input wire clk_in,                // system clock signal
               input wire rst_in,                // reset signal
               input wire rdy_in,                // ready signal, pause cpu when low
               input wire rob_clear_up,
+              input wire io_buffer_full,
               output wire mem_wr,               // to ram			write/read signal (1 for write)
               output wire [31:0] mem_a,         //				memory address
               output wire [7:0] mem_dout,       //				data input
@@ -80,7 +81,7 @@ module Cache (input wire clk_in,                // system clock signal
             bytes_remain <= 0;
             bytes_tot    <= 0;
         end
-        else if (!rdy_in) begin
+        else if (!rdy_in||(io_buffer_full&&mem_wr)) begin
             //do nothing
         end
             else if (!busy&&!lsb_ready&&!start_fetch) begin
