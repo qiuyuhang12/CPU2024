@@ -29,7 +29,8 @@ module Memory_controller (input wire clk_in,                // system clock sign
               output wire [31:0] inst,
               output wire [31:0] inst_addr);
     parameter none              = 2'b00,decoder              = 2'b01, lsb              = 2'b10;
-    assign cache_welcome_signal = !busy&&!start_fetch||fetch_ready||to_lsb_ready;
+    // assign cache_welcome_signal = !busy&&!start_fetch||fetch_ready||to_lsb_ready;
+    assign cache_welcome_signal = !io_buffer_full&&(!busy&&!start_fetch||fetch_ready||to_lsb_ready);
     reg busy;
     reg [1:0]employer;//0 for none,1 for decoder, 2 for lsb
     reg [6:0] op_type;
@@ -45,8 +46,10 @@ module Memory_controller (input wire clk_in,                // system clock sign
     assign inst         = fetch_ready?{mem_din[7:0], load_val[23:0]}:32'b0;
     assign inst_addr    = fetch_ready?addr_reg:32'b0;
     assign to_lsb_ready = busy && employer == lsb && bytes_remain == 0;
+    wire mem_wr_old     = (busy&&bytes_remain&&employer == lsb&&op_type == `S_TYPE)||(!busy&&lsb_ready&&op_type_in == `S_TYPE);
+    assign mem_wr       = !io_buffer_full&&((busy&&bytes_remain&&employer == lsb&&op_type == `S_TYPE)||(!busy&&lsb_ready&&op_type_in == `S_TYPE));
     assign is_load      = to_lsb_ready&&op_type == `LD_TYPE;
-    assign mem_wr       = (busy&&bytes_remain&&employer == lsb&&op_type == `S_TYPE)||(!busy&&lsb_ready&&op_type_in == `S_TYPE);
+    // assign mem_wr       = (busy&&bytes_remain&&employer == lsb&&op_type == `S_TYPE)||(!busy&&lsb_ready&&op_type_in == `S_TYPE);
     // assign mem_a     = addr_reg+(bytes_remain-1);//todo 位运算
     function [31:0] get_mem_a;
         input [2:0] bytes_remain_;
@@ -81,7 +84,8 @@ module Memory_controller (input wire clk_in,                // system clock sign
             bytes_remain <= 0;
             bytes_tot    <= 0;
         end
-        else if (!rdy_in||(io_buffer_full&&mem_wr)) begin
+        // else if (!rdy_in||(io_buffer_full&&mem_wr)) begin
+        else if (!rdy_in) begin
             //do nothing
         end
             else if (!busy&&!lsb_ready&&!start_fetch) begin
@@ -119,6 +123,9 @@ module Memory_controller (input wire clk_in,                // system clock sign
             
             end
         else begin
+            if (io_buffer_full&&mem_wr_old) begin
+            end
+            else
             if (bytes_remain == 0) begin
                 load_val     <= 0;
                 busy         <= 0;
