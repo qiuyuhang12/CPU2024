@@ -33,11 +33,14 @@ assign tag2     = addr2[31:CACHE_BIT+1];
 assign hit1     = exist[index1] && tag[index1] == tag1;
 assign hit2     = exist[index2] && tag[index2] == tag2;
 assign buffer1  = buffer[index1];
+wire buffer1_shows_i = buffer1[1:0]==2'b11;
 assign buffer2  = buffer[index2];
 assign inst_in1 = inst_in[15:0];
 assign inst_in2 = inst_in[31:16];
-assign hit      = hit1 && hit2;
-assign inst_out = hit ? {buffer2, buffer1} : 32'h0;
+// assign hit      = hit1 && hit2;
+// assign inst_out = hit ? {buffer2, buffer1} : 32'h0;
+assign hit      = buffer1_shows_i?(hit1 && hit2):hit1;
+assign inst_out = hit ? buffer1_shows_i?{buffer2, buffer1} :{16'b0, buffer1}: 32'h0;
 integer i;
 always @(posedge clk_in)
     if (rst_in)begin
