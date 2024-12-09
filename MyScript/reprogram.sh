@@ -1,0 +1,1 @@
+vivado -nojournal -nolog -mode batch -script script/program.tcl -tclarg /run/media/grace/archlinux_data/vivado/cpu/cpu.runs/impl_1/riscv_top.bit
