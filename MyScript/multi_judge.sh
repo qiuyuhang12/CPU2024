@@ -7,7 +7,7 @@ for s in $judgelist; do
     # Run the reprogram.sh script
     # echo "Running reprogram.sh with argument $s"
 
-    ./MyScript/reprogram.sh #> MyScript/tmp 2>&1
+    # ./MyScript/reprogram.sh #> MyScript/tmp 2>&1
     
     # Run the single_judge.py script with the current string as an argument
     python MyScript/single_judge.py "$s"
