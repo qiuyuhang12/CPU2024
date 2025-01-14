@@ -44,7 +44,7 @@
 `define LSB_BIT 3
 `define LSB_SIZE (1 << `LSB_BIT)
 
-`define CACHE_BIT 4
+`define CACHE_BIT 8
 `define CACHE_SIZE (1 << `CACHE_BIT)
 `define TAG_BIT 32-1-`CACHE_BIT
 

@@ -16,7 +16,7 @@ def main():
     # 执行命令
     try:
         # result = 
-        result = subprocess.run(command, shell=True, check=True, text=True)
+        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
         # print(result.stdout)
         # print(result.stdout)
     except subprocess.CalledProcessError as e:
